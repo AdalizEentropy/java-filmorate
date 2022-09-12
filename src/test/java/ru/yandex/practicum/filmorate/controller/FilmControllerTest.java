@@ -121,8 +121,9 @@ class FilmControllerTest {
     }
 
     @Test
-    public void shouldNotCreateFilmWithExistName() throws Exception {
-        String errorMessage = "Film with such name already exist";
+    public void shouldNotCreateFilmWithExistId() throws Exception {
+        String errorMessage = "Film with such id already exist";
+        changedFilm.setId(1);
 
         mockMvc.perform(
                         post("/films")
@@ -132,7 +133,7 @@ class FilmControllerTest {
 
         mockMvc.perform(
                         post("/films")
-                                .content(objectMapper.writeValueAsString(newFilm))
+                                .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))

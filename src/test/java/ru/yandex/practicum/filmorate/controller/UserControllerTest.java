@@ -114,8 +114,9 @@ class UserControllerTest {
     }
 
     @Test
-    public void shouldNotCreateUserWithExistEmail() throws Exception {
-        String errorMessage = "User with such email already exist";
+    public void shouldNotCreateUserWithExistId() throws Exception {
+        String errorMessage = "User with such id already exist";
+        changedUser.setId(1);
 
         mockMvc.perform(
                 post("/users")
@@ -125,7 +126,7 @@ class UserControllerTest {
 
         mockMvc.perform(
                 post("/users")
-                        .content(objectMapper.writeValueAsString(newUser))
+                        .content(objectMapper.writeValueAsString(changedUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
