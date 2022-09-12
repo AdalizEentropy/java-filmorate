@@ -45,7 +45,7 @@ public class FilmController {
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public Film update(@Valid @RequestBody Film film, BindingResult bindingResult) {
+    public ResponseEntity<Film> update(@Valid @RequestBody Film film, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             validationFailed(bindingResult);
         }
@@ -57,7 +57,7 @@ public class FilmController {
 
         films.put(film.getId(), film);
         log.info("Updated: {}", film);
-        return film;
+        return ResponseEntity.status(200).body(film);
     }
 
     private void validationFailed (BindingResult errors) {

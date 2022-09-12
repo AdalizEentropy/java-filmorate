@@ -47,7 +47,7 @@ public class UserController {
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public User update(@Valid @RequestBody User user, BindingResult bindingResult) {
+    public ResponseEntity<User> update(@Valid @RequestBody User user, BindingResult bindingResult) {
         if (bindingResult.hasErrors()) {
             validationFailed(bindingResult);
         }
@@ -61,7 +61,7 @@ public class UserController {
 
         users.put(user.getId(), user);
         log.info("Updated: {}", user);
-        return user;
+        return ResponseEntity.status(200).body(user);
     }
 
     private void changeEmptyName(User user) {
