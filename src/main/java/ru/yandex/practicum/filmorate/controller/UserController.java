@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -27,11 +26,7 @@ public class UserController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<User> create(@Valid @NotNull @RequestBody User user, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            validationFailed(bindingResult);
-        }
-
+    public ResponseEntity<User> create(@Valid @NotNull @RequestBody User user) {
         if (users.containsKey(user.getId())) {
             log.warn("User with id {} already exist", user.getId());
             throw new ValidationException("User with such id already exist");
@@ -47,17 +42,13 @@ public class UserController {
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<User> update(@Valid @RequestBody User user, BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            validationFailed(bindingResult);
-        }
-
-        changeEmptyName(user);
-
+    public ResponseEntity<User> update(@Valid @RequestBody User user) {
         if (!users.containsKey(user.getId())) {
             log.warn("User with ID {} does not exist", user.getId());
             throw new UpdateException("User with such ID does not exist");
         }
+
+        changeEmptyName(user);
 
         users.put(user.getId(), user);
         log.info("Updated: {}", user);
@@ -69,12 +60,5 @@ public class UserController {
             log.debug("Empty name was changed");
             user.setName(user.getLogin());
         }
-    }
-
-    private void validationFailed (BindingResult errors) {
-        String error = Objects.requireNonNull(errors.getFieldError()).getDefaultMessage();
-        Object value = Objects.requireNonNull(errors.getFieldError()).getRejectedValue();
-        log.warn(String.format("%s. Current: %s", error, value));
-        throw new ValidationException(error);
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -27,6 +28,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest
 class FilmControllerTest {
     private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvcForError; //because standaloneSetup mock doest work with RestControllerAdvice...
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -167,14 +170,13 @@ class FilmControllerTest {
         String errorMessage = "Empty name";
         newFilm.setName(null);
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -182,20 +184,19 @@ class FilmControllerTest {
         String errorMessage = "Empty name";
         changedFilm.setName(null);
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -203,14 +204,13 @@ class FilmControllerTest {
         String errorMessage = "Incorrect release date";
         newFilm.setReleaseDate(LocalDate.parse("1890-03-25"));
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -218,20 +218,19 @@ class FilmControllerTest {
         String errorMessage = "Incorrect release date";
         changedFilm.setReleaseDate(LocalDate.parse("1895-12-27"));
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -239,14 +238,13 @@ class FilmControllerTest {
         String errorMessage = "Max description length was exceeded";
         newFilm.setDescription("incorrDescription ".repeat(200));
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -254,20 +252,19 @@ class FilmControllerTest {
         String errorMessage = "Max description length was exceeded";
         changedFilm.setDescription("incorrDescription ".repeat(200));
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -275,14 +272,13 @@ class FilmControllerTest {
         String errorMessage = "Incorrect duration";
         newFilm.setDuration(-1);
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -290,19 +286,18 @@ class FilmControllerTest {
         String errorMessage = "Incorrect duration";
         changedFilm.setDuration(-10);
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 }

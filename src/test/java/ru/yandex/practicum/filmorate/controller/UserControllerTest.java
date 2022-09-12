@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -25,6 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest
 class UserControllerTest {
     private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvcForError; //because standaloneSetup mock doest work with RestControllerAdvice...
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -150,7 +153,8 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(changedUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof UpdateException))
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof UpdateException))
                 .andExpect(result -> assertEquals(errorMessage,
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
@@ -160,14 +164,14 @@ class UserControllerTest {
         String errorMessage = "Empty E-mail";
         newUser.setEmail(null);
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(newUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -175,20 +179,20 @@ class UserControllerTest {
         String errorMessage = "Empty E-mail";
         changedUser.setEmail(null);
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(newUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
-                post("/users")
+        mockMvcForError.perform(
+                put("/users")
                         .content(objectMapper.writeValueAsString(changedUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -196,14 +200,14 @@ class UserControllerTest {
         String errorMessage = "Incorrect E-mail";
         newUser.setEmail("incorrectEmail");
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(newUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -211,20 +215,20 @@ class UserControllerTest {
         String errorMessage = "Incorrect E-mail";
         changedUser.setEmail("incorrectEmail");
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(changedUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -232,14 +236,14 @@ class UserControllerTest {
         String errorMessage = "Incorrect Login";
         newUser.setLogin("incorrect login");
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -247,14 +251,14 @@ class UserControllerTest {
         String errorMessage = "Empty Login";
         newUser.setLogin(null);
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -262,20 +266,20 @@ class UserControllerTest {
         String errorMessage = "Incorrect Login";
         changedUser.setLogin("incorrect login");
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(changedUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -283,20 +287,20 @@ class UserControllerTest {
         String errorMessage = "Empty Login";
         changedUser.setLogin(null);
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(changedUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -304,14 +308,14 @@ class UserControllerTest {
         String errorMessage = "Incorrect birthday";
         newUser.setBirthday(LocalDate.now().plusDays(1));
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
@@ -319,20 +323,20 @@ class UserControllerTest {
         String errorMessage = "Incorrect birthday";
         changedUser.setBirthday(LocalDate.now().plusDays(1));
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(
+        mockMvcForError.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(changedUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(result -> assertTrue(result.getResolvedException()
+                        instanceof MethodArgumentNotValidException))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value(errorMessage));
     }
 
     @Test
