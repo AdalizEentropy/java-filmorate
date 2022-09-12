@@ -32,13 +32,9 @@ public class FilmController {
             validationFailed(bindingResult);
         }
 
-        boolean exist = films.values().stream()
-                .map(Film::getName)
-                .anyMatch(name -> name.equals(film.getName()));
-
-        if (exist) {
-            log.warn("Film with name {} already exist", film.getName());
-            throw new ValidationException("Film with such name already exist");
+        if (films.containsKey(film.getId())) {
+            log.warn("Film with id {} already exist", film.getId());
+            throw new ValidationException("Film with such id already exist");
         }
 
         film.setId(filmId);

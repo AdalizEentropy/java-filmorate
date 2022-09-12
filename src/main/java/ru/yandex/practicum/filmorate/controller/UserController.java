@@ -32,16 +32,12 @@ public class UserController {
             validationFailed(bindingResult);
         }
 
-        changeEmptyName(user);
-
-        boolean exist = users.values().stream()
-                .map(User::getEmail)
-                .anyMatch(email -> email.equals(user.getEmail()));
-
-        if (exist) {
-            log.warn("User with email {} already exist", user.getEmail());
-            throw new ValidationException("User with such email already exist");
+        if (users.containsKey(user.getId())) {
+            log.warn("User with id {} already exist", user.getId());
+            throw new ValidationException("User with such id already exist");
         }
+
+        changeEmptyName(user);
 
         user.setId(userId);
         users.put(user.getId(), user);
