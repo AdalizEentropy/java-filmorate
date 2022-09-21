@@ -13,6 +13,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -32,6 +34,8 @@ class FilmControllerTest {
     private MockMvc mockMvcForError; //because standaloneSetup mock doest work with RestControllerAdvice...
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private InMemoryFilmStorage inMemoryFilmStorage;
 
     Film newFilm = Film.builder()
             .name("nisi eiusmod")
@@ -51,7 +55,7 @@ class FilmControllerTest {
 
     @BeforeEach
     public void createMvc() {
-        this.mockMvc = MockMvcBuilders.standaloneSetup(new FilmController()).build();
+        this.mockMvc = MockMvcBuilders.standaloneSetup(new FilmController(inMemoryFilmStorage)).build();
     }
 
     @Test

@@ -1,12 +1,11 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.UpdateException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -14,40 +13,26 @@ import java.util.*;
 
 @RequestMapping("/films")
 @RestController
-@Slf4j
 public class FilmController {
-    private int filmId = 1;
-    private final Map<Integer, Film> films = new HashMap<>();
+    private final FilmStorage filmStorage;
+
+    @Autowired
+    public FilmController(FilmStorage filmStorage) {
+        this.filmStorage = filmStorage;
+    }
 
     @GetMapping()
     public List<Film> findAll() {
-        log.debug("Current amount of films: {}", films.size());
-        return new ArrayList<>(films.values());
+        return filmStorage.findAll();
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Film> create(@Valid @NotNull @RequestBody Film film) {
-        if (films.containsKey(film.getId())) {
-            log.warn("Film with id {} already exist", film.getId());
-            throw new ValidationException("Film with such id already exist");
-        }
-
-        film.setId(filmId);
-        films.put(film.getId(), film);
-        filmId++;
-        log.info("Saved: {}", film);
-        return ResponseEntity.status(201).body(film);
+        return filmStorage.create(film);
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Film> update(@Valid @RequestBody Film film) {
-        if (!films.containsKey(film.getId())) {
-            log.warn("Film with ID {} does not exist", film.getId());
-            throw new UpdateException("Film with such ID does not exist");
-        }
-
-        films.put(film.getId(), film);
-        log.info("Updated: {}", film);
-        return ResponseEntity.status(200).body(film);
+        return filmStorage.update(film);
     }
 }
