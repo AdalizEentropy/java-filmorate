@@ -5,6 +5,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -13,8 +15,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -34,8 +39,22 @@ class FilmControllerTest {
     private MockMvc mockMvcForError; //because standaloneSetup mock doest work with RestControllerAdvice...
     @Autowired
     private ObjectMapper objectMapper;
-    @Autowired
+    @MockBean
     private InMemoryFilmStorage inMemoryFilmStorage;
+    @MockBean
+    private InMemoryUserStorage inMemoryUserStorage;
+    @MockBean
+    private FilmService filmService;
+    @MockBean
+    private UserService userService;
+    @MockBean
+    private UserController userController;
+//    private FilmController filmController = new FilmController(new FilmService
+//            (new InMemoryFilmStorage(), new InMemoryUserStorage()));
+
+
+//    @SpyBean
+//    private FilmController filmController;
 
     Film newFilm = Film.builder()
             .name("nisi eiusmod")
@@ -45,7 +64,7 @@ class FilmControllerTest {
             .build();
 
     Film changedFilm = Film.builder()
-            .id(1)
+            .id(1L)
             .name("Film Updated")
             .description("New film update decription")
             .releaseDate(LocalDate.parse("1989-04-17"))
@@ -55,7 +74,9 @@ class FilmControllerTest {
 
     @BeforeEach
     public void createMvc() {
-        this.mockMvc = MockMvcBuilders.standaloneSetup(new FilmController(inMemoryFilmStorage)).build();
+        //FilmController filmController = new FilmController(new FilmService
+        //        (new InMemoryFilmStorage(), new InMemoryUserStorage()));
+        this.mockMvc = MockMvcBuilders.standaloneSetup(new FilmController(filmService)).build();
     }
 
     @Test
@@ -130,7 +151,7 @@ class FilmControllerTest {
     @Test
     public void shouldNotCreateFilmWithExistId() throws Exception {
         String errorMessage = "Film with such id already exist";
-        changedFilm.setId(1);
+        changedFilm.setId(1L);
 
         mockMvc.perform(
                         post("/films")
@@ -151,7 +172,7 @@ class FilmControllerTest {
     @Test
     public void shouldNotUpdateFilmWithIncorrectId() throws Exception {
         String errorMessage = "Film with such ID does not exist";
-        changedFilm.setId(2);
+        changedFilm.setId(2L);
 
         mockMvc.perform(
                         post("/films")

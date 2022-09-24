@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import static org.hamcrest.Matchers.hasSize;
@@ -32,6 +35,12 @@ class UserControllerTest {
     private MockMvc mockMvcForError; //because standaloneSetup mock doest work with RestControllerAdvice...
     @Autowired
     private ObjectMapper objectMapper;
+    @MockBean
+    private InMemoryFilmStorage inMemoryFilmStorage;
+    @MockBean
+    private InMemoryUserStorage inMemoryUserStorage;
+    @MockBean
+    private UserService userService;
 
     User newUser = User.builder()
             .email("mail@mail.ru")
@@ -41,7 +50,7 @@ class UserControllerTest {
             .build();
 
     User changedUser = User.builder()
-            .id(1)
+            .id(1L)
             .email("mail@yandex.ru")
             .login("doloreUpdate")
             .name("est adipisicing")
@@ -50,7 +59,8 @@ class UserControllerTest {
 
     @BeforeEach
     public void createMvc() {
-        this.mockMvc = MockMvcBuilders.standaloneSetup(new UserController(new InMemoryUserStorage())).build();
+        this.mockMvc = MockMvcBuilders.standaloneSetup(new UserController(userService)).build();
+        //this.mockMvc = MockMvcBuilders.standaloneSetup(new UserController(new InMemoryUserStorage(), new UserService())).build();
     }
 
     @Test
@@ -121,7 +131,7 @@ class UserControllerTest {
     @Test
     public void shouldNotCreateUserWithExistId() throws Exception {
         String errorMessage = "User with such id already exist";
-        changedUser.setId(1);
+        changedUser.setId(1L);
 
         mockMvc.perform(
                 post("/users")
@@ -142,7 +152,7 @@ class UserControllerTest {
     @Test
     public void shouldNotUpdateUserWithIncorrectId() throws Exception {
         String errorMessage = "User with such ID does not exist";
-        changedUser.setId(2);
+        changedUser.setId(2L);
 
         mockMvc.perform(
                 post("/users")

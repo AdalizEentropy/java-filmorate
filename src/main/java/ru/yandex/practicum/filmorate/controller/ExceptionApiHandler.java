@@ -7,7 +7,10 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import ru.yandex.practicum.filmorate.exception.ErrorMessage;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
+import ru.yandex.practicum.filmorate.exception.UpdateException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.ErrorMessage;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -22,6 +25,43 @@ public class ExceptionApiHandler {
         String error = Objects.requireNonNull(bindingResult.getFieldError()).getDefaultMessage();
         Object value = Objects.requireNonNull(bindingResult.getFieldError()).getRejectedValue();
         log.warn(String.format("%s. Current: %s", error, value));
+
+        return new ErrorMessage(LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                error);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage handleEntityNotFoundException(final EntityNotFoundException e) {
+        String error = Objects.requireNonNull(e.getMessage());
+        log.warn(error);
+
+        return new ErrorMessage(LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                error);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorMessage handleUpdateException(final UpdateException e) {
+        String error = Objects.requireNonNull(e.getMessage());
+        log.warn(error);
+
+        return new ErrorMessage(LocalDateTime.now(),
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                error);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleValidationException(final ValidationException e) {
+        String error = Objects.requireNonNull(e.getMessage());
+        System.out.println("Error was here: " + e.getLocalizedMessage());
+        log.warn(error);
 
         return new ErrorMessage(LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
