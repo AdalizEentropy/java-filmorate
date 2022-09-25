@@ -60,12 +60,23 @@ public class ExceptionApiHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorMessage handleValidationException(final ValidationException e) {
         String error = Objects.requireNonNull(e.getMessage());
-        System.out.println("Error was here: " + e.getLocalizedMessage());
         log.warn(error);
 
         return new ErrorMessage(LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                error);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorMessage handleThrowable(final Throwable e) {
+        String error = "Unexpected error";
+        log.warn(error);
+
+        return new ErrorMessage(LocalDateTime.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
                 error);
     }
 }

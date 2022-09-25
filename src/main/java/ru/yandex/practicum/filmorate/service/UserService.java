@@ -1,18 +1,17 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 public class UserService {
     private final UserStorage userStorage;
 
+    @Autowired
     public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
     }
@@ -37,8 +36,8 @@ public class UserService {
         User user = userStorage.getUserById(userId);
         User friend = userStorage.getUserById(friendsId);
 
-        user.setFriends(friendsId);
-        friend.setFriends(userId);
+        user.addFriends(friendsId);
+        friend.addFriends(userId);
     }
 
     public void deleteFriend(Long userId, Long friendsId) {
@@ -52,23 +51,23 @@ public class UserService {
     public List<User> showFriends(Long userId) {
         User user = userStorage.getUserById(userId);
         Optional<Set<Long>> friendsId = Optional.ofNullable(user.getFriends());
-        List<User> friends = new ArrayList<>();
+        List<User> friendsData = new ArrayList<>();
 
         friendsId.ifPresent(friend -> friend.stream()
-                .map(userStorage::getUserById).forEach(friends::add));
+                .map(userStorage::getUserById).forEach(friendsData::add));
 
-        return friends;
+        return friendsData;
     }
 
     public List<User> showCommonFriends(Long userId, Long friendsId) {
         User user = userStorage.getUserById(userId);
         User friend = userStorage.getUserById(friendsId);
+        Optional<Set<Long>> userFriends = Optional.of(new TreeSet<>(user.getFriends()));
         List<User> commonFriends = new ArrayList<>();
 
-        Optional<Set<Long>> commonUsers = Optional.ofNullable(user.getFriends());
-        commonUsers.ifPresent(friends -> friends.retainAll(friend.getFriends()));
+        userFriends.ifPresent(users -> users.retainAll(friend.getFriends()));
 
-        commonUsers.ifPresent(frId -> frId.stream()
+        userFriends.ifPresent(frId -> frId.stream()
                 .map(userStorage::getUserById).forEach(commonFriends::add));
 
         return commonFriends;

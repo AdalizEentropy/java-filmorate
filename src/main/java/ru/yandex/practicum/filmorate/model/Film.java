@@ -1,10 +1,8 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateValid;
 
 import javax.validation.constraints.NotBlank;
@@ -16,8 +14,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class Film {
     private Long id;
@@ -36,9 +32,9 @@ public class Film {
     private long duration;
 
     private Integer rate;
-    private Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::intValue));
+    private final Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
 
-    public void setLikeFromUserId(Long id) {
+    public void addLikeFromUserId(Long id) {
         this.likeFromUserId.add(id);
     }
 }

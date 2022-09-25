@@ -1,20 +1,17 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class User {
     private Long id;
@@ -32,9 +29,10 @@ public class User {
     @Past(message = "Incorrect birthday")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate birthday;
-    private Set<Long> friends = new TreeSet<>(Comparator.comparingLong(Long::intValue));
 
-    public void setFriends(Long id) {
+    private final Set<Long> friends = new TreeSet<>(Comparator.comparingLong(Long::longValue));
+
+    public void addFriends(Long id) {
         this.friends.add(id);
     }
 }

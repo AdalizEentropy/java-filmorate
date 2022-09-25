@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -27,18 +26,21 @@ public class UserController {
     }
 
     @PostMapping()
-    public ResponseEntity<User> create(@Valid @NotNull @RequestBody User user) {
-        return ResponseEntity.status(201).body(userService.create(user));
+    @ResponseStatus(code = HttpStatus.CREATED)
+    public User create(@Valid @NotNull @RequestBody User user) {
+        return userService.create(user);
     }
 
     @PutMapping()
-    public ResponseEntity<User> update(@Valid @RequestBody User user) {
-        return ResponseEntity.status(200).body(userService.update(user));
+    @ResponseStatus(code = HttpStatus.OK)
+    public User update(@Valid @RequestBody User user) {
+        return userService.update(user);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return ResponseEntity.status(200).body(userService.getUserById(id));
+    @ResponseStatus(code = HttpStatus.OK)
+    public User getUserById(@PathVariable Long id) {
+        return userService.getUserById(id);
     }
 
     @PutMapping("/{id}/friends/{friendId}")
@@ -54,13 +56,15 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends")
-    public ResponseEntity<List<User>> showFriends(@PathVariable Long id) {
-        return ResponseEntity.status(200).body(userService.showFriends(id));
+    @ResponseStatus(code = HttpStatus.OK)
+    public List<User> showFriends(@PathVariable Long id) {
+        return userService.showFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public ResponseEntity<List<User>> showCommonFriends(@PathVariable Long id,
+    @ResponseStatus(code = HttpStatus.OK)
+    public List<User> showCommonFriends(@PathVariable Long id,
                                                         @PathVariable Long otherId) {
-        return ResponseEntity.status(200).body(userService.showCommonFriends(id, otherId));
+        return userService.showCommonFriends(id, otherId);
     }
 }

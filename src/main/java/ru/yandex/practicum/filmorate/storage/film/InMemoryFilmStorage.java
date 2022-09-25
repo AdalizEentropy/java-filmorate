@@ -15,7 +15,7 @@ import java.util.Map;
 @Component
 @Slf4j
 public class InMemoryFilmStorage implements FilmStorage {
-    private static Long filmId = 1L;
+    private Long filmId = 1L;
     private final Map<Long, Film> films = new HashMap<>();
 
     @Override
@@ -58,7 +58,7 @@ public class InMemoryFilmStorage implements FilmStorage {
         return films.get(filmId);
     }
 
-    private static Long getNextId(){
+    private Long getNextId(){
         return filmId++;
     }
 }
