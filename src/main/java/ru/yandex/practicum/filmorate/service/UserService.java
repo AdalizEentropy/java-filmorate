@@ -68,7 +68,8 @@ public class UserService {
         userFriends.ifPresent(users -> users.retainAll(friend.getFriends()));
 
         userFriends.ifPresent(frId -> frId.stream()
-                .map(userStorage::getUserById).forEach(commonFriends::add));
+                .map(userStorage::getUserById)
+                .forEach(commonFriends::add));
 
         return commonFriends;
     }
