@@ -33,21 +33,21 @@ public class FilmService {
     }
 
     public Film getFilmById(Long filmId) {
-        return filmStorage.getFilmById(filmId);
+        return filmStorage.getById(filmId);
     }
 
     public void addLike(Long filmId, Long userId) {
-        userStorage.getUserById(userId);
-        Film film = filmStorage.getFilmById(filmId);
+        userStorage.getById(userId);
+        Film film = filmStorage.getById(filmId);
 
         film.addLikeFromUserId(userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
-        userStorage.getUserById(userId);
-        Film film = filmStorage.getFilmById(filmId);
+        userStorage.getById(userId);
+        Film film = filmStorage.getById(filmId);
 
-        film.getLikeFromUserId().remove(userId);
+        film.removeLikeFromUserId(userId);
     }
 
     public List<Film> showMostPopularFilms(Integer count) {

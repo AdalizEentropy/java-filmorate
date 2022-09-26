@@ -54,7 +54,7 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     @Override
-    public User getUserById(Long userId) {
+    public User getById(Long userId) {
         if (!users.containsKey(userId)) {
             throw new EntityNotFoundException("There are no such user");
         }

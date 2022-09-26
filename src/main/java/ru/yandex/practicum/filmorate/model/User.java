@@ -7,7 +7,6 @@ import lombok.Data;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -32,7 +31,11 @@ public class User {
 
     private final Set<Long> friends = new TreeSet<>(Comparator.comparingLong(Long::longValue));
 
-    public void addFriends(Long id) {
+    public void addFriend(Long id) {
         this.friends.add(id);
+    }
+
+    public void removeFriend(Long id) {
+        this.friends.remove(id);
     }
 }

@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -29,48 +30,50 @@ public class UserService {
     }
 
     public User getUserById(Long userId) {
-        return userStorage.getUserById(userId);
+        return userStorage.getById(userId);
     }
 
     public void addFriend(Long userId, Long friendsId) {
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendsId);
+        User user = userStorage.getById(userId);
+        User friend = userStorage.getById(friendsId);
 
-        user.addFriends(friendsId);
-        friend.addFriends(userId);
+        user.addFriend(friendsId);
+        friend.addFriend(userId);
     }
 
     public void deleteFriend(Long userId, Long friendsId) {
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendsId);
+        User user = userStorage.getById(userId);
+        User friend = userStorage.getById(friendsId);
 
-        user.getFriends().remove(friendsId);
-        friend.getFriends().remove(userId);
+        user.removeFriend(friendsId);
+        friend.removeFriend(userId);
     }
 
     public List<User> showFriends(Long userId) {
-        User user = userStorage.getUserById(userId);
-        Optional<Set<Long>> friendsId = Optional.ofNullable(user.getFriends());
-        List<User> friendsData = new ArrayList<>();
+        User user = userStorage.getById(userId);
 
-        friendsId.ifPresent(friend -> friend.stream()
-                .map(userStorage::getUserById).forEach(friendsData::add));
+        if (user.getFriends() == null) {
+            return new ArrayList<>();
+        }
 
-        return friendsData;
+        return user.getFriends().stream()
+                    .map(userStorage::getById)
+                    .collect(Collectors.toList());
     }
 
     public List<User> showCommonFriends(Long userId, Long friendsId) {
-        User user = userStorage.getUserById(userId);
-        User friend = userStorage.getUserById(friendsId);
+        User user = userStorage.getById(userId);
+        User friend = userStorage.getById(friendsId);
         Optional<Set<Long>> userFriends = Optional.of(new TreeSet<>(user.getFriends()));
-        List<User> commonFriends = new ArrayList<>();
 
         userFriends.ifPresent(users -> users.retainAll(friend.getFriends()));
 
-        userFriends.ifPresent(frId -> frId.stream()
-                .map(userStorage::getUserById)
-                .forEach(commonFriends::add));
+        if (userFriends.isEmpty()) {
+            return new ArrayList<>();
+        }
 
-        return commonFriends;
+        return userFriends.get().stream()
+                .map(userStorage::getById)
+                .collect(Collectors.toList());
     }
 }

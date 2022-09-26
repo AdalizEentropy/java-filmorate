@@ -37,4 +37,8 @@ public class Film {
     public void addLikeFromUserId(Long id) {
         this.likeFromUserId.add(id);
     }
+
+    public void removeLikeFromUserId(Long id) {
+        this.likeFromUserId.remove(id);
+    }
 }
