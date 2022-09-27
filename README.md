@@ -34,7 +34,7 @@
 
 
 ### Документация
-Swagger API можно нати по ссылке http://localhost:8080/v3/api-docs
+Swagger API можно нати по ссылке http://localhost:8080/swagger-ui/index.html
 
 --- 
 Приложение написано на _Java Spring Boot_, а так же используется фреймворк _Maven_.
