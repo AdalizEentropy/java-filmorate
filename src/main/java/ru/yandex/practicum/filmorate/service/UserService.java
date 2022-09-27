@@ -62,17 +62,15 @@ public class UserService {
     }
 
     public List<User> showCommonFriends(Long userId, Long friendsId) {
-        User user = userStorage.getById(userId);
-        User friend = userStorage.getById(friendsId);
-        Optional<Set<Long>> userFriends = Optional.of(new TreeSet<>(user.getFriends()));
+        Set<Long> userFriends = userStorage.getById(userId).getFriends();
+        Set<Long> friendFriends = userStorage.getById(friendsId).getFriends();
 
-        userFriends.ifPresent(users -> users.retainAll(friend.getFriends()));
-
-        if (userFriends.isEmpty()) {
+        if (userFriends == null) {
             return new ArrayList<>();
         }
 
-        return userFriends.get().stream()
+        return userFriends.stream()
+                .filter(friendFriends::contains)
                 .map(userStorage::getById)
                 .collect(Collectors.toList());
     }
