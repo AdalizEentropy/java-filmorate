@@ -27,8 +27,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film create(Film film) {
         if (films.containsKey(film.getId())) {
-            log.warn("Film with id {} already exist", film.getId());
-            throw new ValidationException("Film with such id already exist");
+            throw new ValidationException(String.format("Film with id %s already exist", film.getId()));
         }
 
         film.setId(getNextId());
@@ -40,8 +39,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film update(Film film) {
         if (!films.containsKey(film.getId())) {
-            log.warn("Film with ID {} does not exist", film.getId());
-            throw new UpdateException("Film with such ID does not exist");
+            throw new UpdateException(String.format("Film with ID %s does not exist", film.getId()));
         }
 
         films.put(film.getId(), film);
@@ -52,7 +50,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film getById(Long filmId) {
         if (!films.containsKey(filmId)) {
-            throw new EntityNotFoundException("There are no such film");
+            throw new EntityNotFoundException(String.format("There are such film with ID %s", filmId));
         }
 
         return films.get(filmId);

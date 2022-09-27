@@ -72,7 +72,7 @@ public class ExceptionApiHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorMessage handleThrowable(final Throwable e) {
         String error = "Unexpected error";
-        log.warn(error);
+        log.error(error);
 
         return new ErrorMessage(LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),

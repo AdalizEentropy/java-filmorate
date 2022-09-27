@@ -27,8 +27,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User create(User user) {
         if (users.containsKey(user.getId())) {
-            log.warn("User with id {} already exist", user.getId());
-            throw new ValidationException("User with such id already exist");
+            throw new ValidationException(String.format("User with ID %s already exist", user.getId()));
         }
 
         changeEmptyName(user);
@@ -42,8 +41,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User update(User user) {
         if (!users.containsKey(user.getId())) {
-            log.warn("User with ID {} does not exist", user.getId());
-            throw new UpdateException("User with such ID does not exist");
+            throw new UpdateException(String.format("User with ID %s does not exist", user.getId()));
         }
 
         changeEmptyName(user);
@@ -56,7 +54,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User getById(Long userId) {
         if (!users.containsKey(userId)) {
-            throw new EntityNotFoundException("There are no such user");
+            throw new EntityNotFoundException(String.format("There are such user with ID %s", userId));
         }
 
         return users.get(userId);
