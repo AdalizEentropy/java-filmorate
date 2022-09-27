@@ -1,57 +1,54 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import static org.hamcrest.Matchers.hasSize;
 
 import java.time.LocalDate;
 import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest
+@SpringBootTest
+@AutoConfigureMockMvc
 class UserControllerTest {
-    private MockMvc mockMvc;
     @Autowired
-    private MockMvc mockMvcForError; //because standaloneSetup mock doest work with RestControllerAdvice...
+    private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
 
-    User newUser = User.builder()
+    final User newUser = User.builder()
             .email("mail@mail.ru")
             .login("dolore")
             .name("Nick Name")
             .birthday(LocalDate.parse("1946-08-20"))
             .build();
 
-    User changedUser = User.builder()
-            .id(1)
+    final User changedUser = User.builder()
+            .id(1L)
             .email("mail@yandex.ru")
             .login("doloreUpdate")
             .name("est adipisicing")
             .birthday(LocalDate.parse("1976-09-20"))
             .build();
 
-    @BeforeEach
-    public void createMvc() {
-        this.mockMvc = MockMvcBuilders.standaloneSetup(new UserController()).build();
-    }
-
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldCreateUser() throws Exception {
         mockMvc.perform(
                 post("/users")
@@ -67,6 +64,7 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldChangeUser() throws Exception {
         mockMvc.perform(
                 post("/users")
@@ -98,6 +96,7 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldGetUser() throws Exception {
         mockMvc.perform(
                 post("/users")
@@ -117,9 +116,10 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotCreateUserWithExistId() throws Exception {
         String errorMessage = "User with such id already exist";
-        changedUser.setId(1);
+        changedUser.setId(1L);
 
         mockMvc.perform(
                 post("/users")
@@ -138,9 +138,10 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateUserWithIncorrectId() throws Exception {
         String errorMessage = "User with such ID does not exist";
-        changedUser.setId(2);
+        changedUser.setId(2L);
 
         mockMvc.perform(
                 post("/users")
@@ -164,7 +165,7 @@ class UserControllerTest {
         String errorMessage = "Empty E-mail";
         newUser.setEmail(null);
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(newUser))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -175,17 +176,18 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateUserWithEmptyEmail() throws Exception {
         String errorMessage = "Empty E-mail";
         changedUser.setEmail(null);
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(newUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                 put("/users")
                         .content(objectMapper.writeValueAsString(changedUser))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -200,7 +202,7 @@ class UserControllerTest {
         String errorMessage = "Incorrect E-mail";
         newUser.setEmail("incorrectEmail");
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(newUser))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -211,17 +213,18 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateUserWithIncorrectEmail() throws Exception {
         String errorMessage = "Incorrect E-mail";
         changedUser.setEmail("incorrectEmail");
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(changedUser))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -236,7 +239,7 @@ class UserControllerTest {
         String errorMessage = "Incorrect Login";
         newUser.setLogin("incorrect login");
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -251,7 +254,7 @@ class UserControllerTest {
         String errorMessage = "Empty Login";
         newUser.setLogin(null);
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -262,17 +265,18 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateUserWithSpaceInLogin() throws Exception {
         String errorMessage = "Incorrect Login";
         changedUser.setLogin("incorrect login");
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(changedUser))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -283,17 +287,18 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateUserWithEmptyLogin() throws Exception {
         String errorMessage = "Empty Login";
         changedUser.setLogin(null);
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(changedUser))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -308,7 +313,7 @@ class UserControllerTest {
         String errorMessage = "Incorrect birthday";
         newUser.setBirthday(LocalDate.now().plusDays(1));
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -319,17 +324,18 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateUserWithIncorrectBirthday() throws Exception {
         String errorMessage = "Incorrect birthday";
         changedUser.setBirthday(LocalDate.now().plusDays(1));
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         put("/users")
                                 .content(objectMapper.writeValueAsString(changedUser))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -340,6 +346,7 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldChangeEmptyNameInCreate() throws Exception {
         newUser.setName(null);
 
@@ -352,6 +359,7 @@ class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldChangeEmptyNameInUpdate() throws Exception {
         changedUser.setName(null);
 

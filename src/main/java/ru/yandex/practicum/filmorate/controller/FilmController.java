@@ -1,53 +1,64 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.UpdateException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.List;
 
 @RequestMapping("/films")
 @RestController
-@Slf4j
 public class FilmController {
-    private int filmId = 1;
-    private final Map<Integer, Film> films = new HashMap<>();
+    private static final String FILMS_COUNT = "10";
+    private final FilmService filmService;
+
+    @Autowired
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
 
     @GetMapping()
     public List<Film> findAll() {
-        log.debug("Current amount of films: {}", films.size());
-        return new ArrayList<>(films.values());
+        return filmService.findAll();
     }
 
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Film> create(@Valid @NotNull @RequestBody Film film) {
-        if (films.containsKey(film.getId())) {
-            log.warn("Film with id {} already exist", film.getId());
-            throw new ValidationException("Film with such id already exist");
-        }
-
-        film.setId(filmId);
-        films.put(film.getId(), film);
-        filmId++;
-        log.info("Saved: {}", film);
-        return ResponseEntity.status(201).body(film);
+    @PostMapping()
+    @ResponseStatus(code = HttpStatus.CREATED)
+    public Film create(@Valid @NotNull @RequestBody Film film) {
+        return filmService.create(film);
     }
 
-    @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Film> update(@Valid @RequestBody Film film) {
-        if (!films.containsKey(film.getId())) {
-            log.warn("Film with ID {} does not exist", film.getId());
-            throw new UpdateException("Film with such ID does not exist");
-        }
+    @PutMapping()
+    @ResponseStatus(code = HttpStatus.OK)
+    public Film update(@Valid @RequestBody Film film) {
+        return filmService.update(film);
+    }
 
-        films.put(film.getId(), film);
-        log.info("Updated: {}", film);
-        return ResponseEntity.status(200).body(film);
+    @GetMapping("/{id}")
+    @ResponseStatus(code = HttpStatus.OK)
+    public Film getFilmById(@PathVariable Long id) {
+        return filmService.getFilmById(id);
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+    public void addLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.addLike(id, userId);
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+    public void deleteLike(@PathVariable Long id, @PathVariable Long userId) {
+        filmService.deleteLike(id, userId);
+    }
+
+    @GetMapping("/popular")
+    @ResponseStatus(code = HttpStatus.OK)
+    public List<Film> showMostPopularFilms(@RequestParam(defaultValue = FILMS_COUNT) Integer count) {
+        return filmService.showMostPopularFilms(count);
     }
 }

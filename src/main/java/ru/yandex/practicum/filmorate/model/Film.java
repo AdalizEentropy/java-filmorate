@@ -1,21 +1,22 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateValid;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.Size;
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.Set;
+import java.util.TreeSet;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class Film {
-    private Integer id;
+    private Long id;
 
     @NotBlank(message = "Empty name")
     private String name;
@@ -31,4 +32,13 @@ public class Film {
     private long duration;
 
     private Integer rate;
+    private final Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
+
+    public void addLikeFromUserId(Long id) {
+        this.likeFromUserId.add(id);
+    }
+
+    public void removeLikeFromUserId(Long id) {
+        this.likeFromUserId.remove(id);
+    }
 }

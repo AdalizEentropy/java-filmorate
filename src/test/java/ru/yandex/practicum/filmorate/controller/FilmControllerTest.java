@@ -1,14 +1,14 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -21,27 +21,26 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest
+@SpringBootTest
+@AutoConfigureMockMvc
 class FilmControllerTest {
-    private MockMvc mockMvc;
     @Autowired
-    private MockMvc mockMvcForError; //because standaloneSetup mock doest work with RestControllerAdvice...
+    private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
 
-    Film newFilm = Film.builder()
+    final Film newFilm = Film.builder()
             .name("nisi eiusmod")
             .description("adipisicing")
             .releaseDate(LocalDate.parse("1967-03-25"))
             .duration(100)
             .build();
 
-    Film changedFilm = Film.builder()
-            .id(1)
+    final Film changedFilm = Film.builder()
+            .id(1L)
             .name("Film Updated")
             .description("New film update decription")
             .releaseDate(LocalDate.parse("1989-04-17"))
@@ -49,12 +48,8 @@ class FilmControllerTest {
             .rate(4)
             .build();
 
-    @BeforeEach
-    public void createMvc() {
-        this.mockMvc = MockMvcBuilders.standaloneSetup(new FilmController()).build();
-    }
-
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldCreateFilm() throws Exception {
         mockMvc.perform(
                         post("/films")
@@ -71,6 +66,7 @@ class FilmControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldChangeFilm() throws Exception {
         mockMvc.perform(
                 post("/films")
@@ -104,6 +100,7 @@ class FilmControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldGetFilm() throws Exception {
         mockMvc.perform(
                 post("/films")
@@ -124,9 +121,10 @@ class FilmControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotCreateFilmWithExistId() throws Exception {
         String errorMessage = "Film with such id already exist";
-        changedFilm.setId(1);
+        changedFilm.setId(1L);
 
         mockMvc.perform(
                         post("/films")
@@ -145,9 +143,10 @@ class FilmControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateFilmWithIncorrectId() throws Exception {
         String errorMessage = "Film with such ID does not exist";
-        changedFilm.setId(2);
+        changedFilm.setId(2L);
 
         mockMvc.perform(
                         post("/films")
@@ -170,7 +169,7 @@ class FilmControllerTest {
         String errorMessage = "Empty name";
         newFilm.setName(null);
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -180,17 +179,18 @@ class FilmControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateFilmWithEmptyName() throws Exception {
         String errorMessage = "Empty name";
         changedFilm.setName(null);
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -204,7 +204,7 @@ class FilmControllerTest {
         String errorMessage = "Incorrect release date";
         newFilm.setReleaseDate(LocalDate.parse("1890-03-25"));
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -214,17 +214,18 @@ class FilmControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateFilmWithIncorrectReleaseDate() throws Exception {
         String errorMessage = "Incorrect release date";
         changedFilm.setReleaseDate(LocalDate.parse("1895-12-27"));
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -238,7 +239,7 @@ class FilmControllerTest {
         String errorMessage = "Max description length was exceeded";
         newFilm.setDescription("incorrDescription ".repeat(200));
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -248,17 +249,18 @@ class FilmControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateFilmWithLongDescription() throws Exception {
         String errorMessage = "Max description length was exceeded";
         changedFilm.setDescription("incorrDescription ".repeat(200));
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -272,7 +274,7 @@ class FilmControllerTest {
         String errorMessage = "Incorrect duration";
         newFilm.setDuration(-1);
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
@@ -282,17 +284,18 @@ class FilmControllerTest {
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateFilmWithIncorrectDuration() throws Exception {
         String errorMessage = "Incorrect duration";
         changedFilm.setDuration(-10);
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        mockMvcForError.perform(
+        mockMvc.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
