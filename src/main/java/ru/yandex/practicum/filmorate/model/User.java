@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
@@ -30,6 +31,7 @@ public class User {
     private LocalDate birthday;
 
     private final Set<Long> friends = new TreeSet<>(Comparator.comparingLong(Long::longValue));
+    //private final Set<Friendship> friends
 
     public void addFriend(Long id) {
         this.friends.add(id);

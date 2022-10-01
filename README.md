@@ -1,16 +1,19 @@
 # Filmorate
+![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
+![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=java&logoColor=white)
+![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36?style=for-the-badge&logo=Apache%20Maven&logoColor=white)
+![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
 
 ### Описание
 
 Представьте, что после тяжелого дня вы решили отдохнуть и провести вечер за просмотром фильма. Вкусная еда уже готовится, любимый плед уютно свернулся на кресле — а вы всё ещё не выбрали, что же посмотреть!
 Фильмов много — и с каждым годом становится всё больше. Чем их больше, тем больше разных оценок. Чем больше оценок, тем сложнее сделать выбор.
-Данное приложение представляет собой бэкенд для сервиса, который будет работать с фильмами и оценками пользователей, а также возвращать топ-10 фильмов, рекомендованных к просмотру. Теперь ни вам, ни вашим друзьям не придётся долго размышлять, что посмотреть вечером.
+Данное приложение представляет собой бэкенд для сервиса, который будет работать с фильмами и оценками пользователей, а также возвращать X-топ фильмов, рекомендованных к просмотру. Теперь ни вам, ни вашим друзьям не придётся долго размышлять, что посмотреть вечером.
 
 
 
-### Приложение умеет работать:
-<!--suppress CheckImageSize, CheckImageSize -->
-<img alt="img_1.png" height="20" src="img2.png" width="20"/> С пользователями:
+#### Приложение умеет работать:
+<h4><img alt="img_1.png" height="15" src="img2.png"/> С пользователями:</h4>
 
    * Добавлять;
    * Редактировать;
@@ -21,8 +24,7 @@
    * Выводить список друзей конкретного пользователя;
    * Выводить список общих друзей.
 
-<!--suppress CheckImageSize, CheckImageSize -->
-<img alt="img_1.png" height="20" src="img1.png" width="20"/> С фильмами:
+<h4><img alt="img_1.png" height="15" src="img1.png"/> С фильмами:</h4>
 
    * Добавлять
    * Редактировать
@@ -31,10 +33,17 @@
    * Ставить лайки
    * Удалять лайки
    * Выводить Х-топ популярных фильмов.
-
-
+<br />
+<br />
+---
 ### Документация
-Swagger API можно нати по ссылке http://localhost:8080/swagger-ui/index.html
+#### Swagger API
+Swagger API можно нати по ссылке http://localhost:8080/swagger-ui/index.html после запуска проекта, либо в статическом 
+файле index.html в корне проекта
+<br />
+<br />
 
---- 
-Приложение написано на _Java Spring Boot_, а так же используется фреймворк _Maven_.
+#### Модель базы данных
+![](ER-model-DB-Filmorate.png)
+<br />
+<br />
