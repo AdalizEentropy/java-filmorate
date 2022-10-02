@@ -1,8 +1,11 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.enums.Genre;
+import ru.yandex.practicum.filmorate.model.enums.Mpa;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateValid;
 
 import javax.validation.constraints.NotBlank;
@@ -10,6 +13,7 @@ import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -33,6 +37,8 @@ public class Film {
 
     private Integer rate;
     private final Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
+    private List<Genre> genre;
+    private Mpa mpa;
 
     public void addLikeFromUserId(Long id) {
         this.likeFromUserId.add(id);
