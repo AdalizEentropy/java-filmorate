@@ -70,7 +70,8 @@ Swagger API можно нати по ссылке http://localhost:8080/swagger-
     FROM film f
     JOIN like l ON f.id=l.filmid
     GROUP BY l.filmid
-    ORDER BY COUNT(l.userid) DESC</code>
+    ORDER BY COUNT(l.userid) DESC
+    LIMIT 10</code>
 </pre>
 
 ##### Получение названий жанров для фильма №2
