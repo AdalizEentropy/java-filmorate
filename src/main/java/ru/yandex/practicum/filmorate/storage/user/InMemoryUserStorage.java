@@ -2,15 +2,11 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -30,8 +26,6 @@ public class InMemoryUserStorage implements UserStorage {
             throw new ValidationException(String.format("User with ID %s already exist", user.getId()));
         }
 
-        changeEmptyName(user);
-
         user.setId(getNextId());
         users.put(user.getId(), user);
         log.info("Saved: {}", user);
@@ -40,12 +34,6 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        if (!users.containsKey(user.getId())) {
-            throw new UpdateException(String.format("User with ID %s does not exist", user.getId()));
-        }
-
-        changeEmptyName(user);
-
         users.put(user.getId(), user);
         log.info("Updated: {}", user);
         return user;
@@ -53,18 +41,45 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User getById(Long userId) {
-        if (!users.containsKey(userId)) {
-            throw new EntityNotFoundException(String.format("There are such user with ID %s", userId));
-        }
-
         return users.get(userId);
     }
 
-    private void changeEmptyName(User user) {
-        if (user.getName() == null || user.getName().isBlank()) {
-            log.debug("Empty name was changed");
-            user.setName(user.getLogin());
+    @Override
+    public void addFriend(User user, User friend) {
+        user.addFriend(friend.getId());
+        friend.addFriend(user.getId());
+    }
+
+    @Override
+    public void deleteFriend(User user, User friend) {
+        user.removeFriend(friend.getId());
+        friend.removeFriend(user.getId());
+    }
+
+    @Override
+    public List<User> showFriends(User user) {
+        if (user.getFriends() == null) {
+            return new ArrayList<>();
         }
+
+        return user.getFriends().stream()
+                .map(this::getById)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<User> showCommonFriends(User user, User friend) {
+        Set<Long> userFriends = user.getFriends();
+        Set<Long> friendFriends = friend.getFriends();
+
+        if (userFriends == null) {
+            return new ArrayList<>();
+        }
+
+        return userFriends.stream()
+                .filter(friendFriends::contains)
+                .map(this::getById)
+                .collect(Collectors.toList());
     }
 
     private Long getNextId(){

@@ -1,19 +1,21 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class UserService {
     private final UserStorage userStorage;
 
     @Autowired
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -22,10 +24,14 @@ public class UserService {
     }
 
     public User create(User user) {
+        changeEmptyName(user);
         return userStorage.create(user);
     }
 
     public User update(User user) {
+        getUserById(user.getId());
+        changeEmptyName(user);
+
         return userStorage.update(user);
     }
 
@@ -34,44 +40,36 @@ public class UserService {
     }
 
     public void addFriend(Long userId, Long friendsId) {
-        User user = userStorage.getById(userId);
-        User friend = userStorage.getById(friendsId);
+        User user = getUserById(userId);
+        User friend = getUserById(friendsId);
 
-        user.addFriend(friendsId);
-        friend.addFriend(userId);
+        userStorage.addFriend(user, friend);
     }
 
     public void deleteFriend(Long userId, Long friendsId) {
-        User user = userStorage.getById(userId);
-        User friend = userStorage.getById(friendsId);
+        User user = getUserById(userId);
+        User friend = getUserById(friendsId);
 
-        user.removeFriend(friendsId);
-        friend.removeFriend(userId);
+        userStorage.deleteFriend(user, friend);
     }
 
     public List<User> showFriends(Long userId) {
-        User user = userStorage.getById(userId);
+        User user = getUserById(userId);
 
-        if (user.getFriends() == null) {
-            return new ArrayList<>();
-        }
-
-        return user.getFriends().stream()
-                    .map(userStorage::getById)
-                    .collect(Collectors.toList());
+        return userStorage.showFriends(user);
     }
 
     public List<User> showCommonFriends(Long userId, Long friendsId) {
-        Set<Long> userFriends = userStorage.getById(userId).getFriends();
-        Set<Long> friendFriends = userStorage.getById(friendsId).getFriends();
+        User user = getUserById(userId);
+        User friend = getUserById(friendsId);
 
-        if (userFriends == null) {
-            return new ArrayList<>();
+        return userStorage.showCommonFriends(user, friend);
+    }
+
+    private void changeEmptyName(User user) {
+        if (user.getName() == null || user.getName().isBlank()) {
+            log.debug("Empty name was changed");
+            user.setName(user.getLogin());
         }
-
-        return userFriends.stream()
-                .filter(friendFriends::contains)
-                .map(userStorage::getById)
-                .collect(Collectors.toList());
     }
 }
