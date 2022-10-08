@@ -10,7 +10,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -159,7 +158,7 @@ class FilmControllerTest {
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof UpdateException))
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
                 .andExpect(result -> assertEquals(errorMessage,
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }

@@ -27,7 +27,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> findAll() {
-        String sqlQuery = "SELECT * " +
+        String sqlQuery =
+                "SELECT * " +
                 "FROM users " +
                 "ORDER BY id;";
 
@@ -49,10 +50,11 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        String sqlQuery = "UPDATE users " +
-                "SET email = ?," +
-                    "login = ?," +
-                    "name = ?," +
+        String sqlQuery =
+                "UPDATE users " +
+                "SET email = ?, " +
+                    "login = ?, " +
+                    "name = ?, " +
                     "birthday = ? " +
                 "WHERE id = ?;";
 
@@ -74,7 +76,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public User getById(Long userId) {
-        String sqlQuery = "SELECT * " +
+        String sqlQuery =
+                "SELECT * " +
                 "FROM users " +
                 "WHERE id = ?;";
 
@@ -87,7 +90,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void addFriend(User user, User friend) {
-        String sqlQuery = "INSERT INTO friendship " +
+        String sqlQuery =
+                "INSERT INTO friendship " +
                 "VALUES (?, ?, ?);";
 
         jdbcTemplate.update(sqlQuery,
@@ -101,7 +105,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public void deleteFriend(User user, User friend) {
-        String sqlQuery = "DELETE FROM friendship " +
+        String sqlQuery =
+                "DELETE FROM friendship " +
                 "WHERE user_id = ? AND " +
                     "friend_id = ?;";
 
@@ -114,7 +119,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> showFriends(User user) {
-        String sqlQuery = "SELECT u.* " +
+        String sqlQuery =
+                "SELECT u.* " +
                 "FROM friendship fs " +
                 "JOIN users u ON fs.friend_id = u.id " +
                 "WHERE fs.user_id = ? " +
@@ -125,7 +131,8 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> showCommonFriends(User user, User friend) {
-        String sqlQuery = "SELECT u.* " +
+        String sqlQuery =
+                "SELECT u.* " +
                 "FROM friendship fs_user " +
                 "JOIN (SELECT * " +
                     "FROM friendship " +
@@ -152,7 +159,8 @@ public class UserDbStorage implements UserStorage {
     }
 
     private List<Long> showFriendsId(Long userId) {
-        String sqlQuery = "SELECT friend_id " +
+        String sqlQuery =
+                "SELECT friend_id " +
                 "FROM friendship " +
                 "WHERE user_id = ? " +
                 "ORDER BY friend_id;";

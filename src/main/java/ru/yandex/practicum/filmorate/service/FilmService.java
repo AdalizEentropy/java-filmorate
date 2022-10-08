@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
@@ -16,7 +15,8 @@ public class FilmService {
     private final UserStorage userStorage;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, @Qualifier("inMemoryUserStorage") UserStorage userStorage) {
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDbStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
@@ -30,6 +30,7 @@ public class FilmService {
     }
 
     public Film update(Film film) {
+        getFilmById(film.getId());
         return filmStorage.update(film);
     }
 
@@ -39,27 +40,19 @@ public class FilmService {
 
     public void addLike(Long filmId, Long userId) {
         userStorage.getById(userId);
-        Film film = filmStorage.getById(filmId);
+        Film film = getFilmById(filmId);
 
-        film.addLikeFromUserId(userId);
+        filmStorage.addLike(film, userId);
     }
 
     public void deleteLike(Long filmId, Long userId) {
         userStorage.getById(userId);
-        Film film = filmStorage.getById(filmId);
+        Film film = getFilmById(filmId);
 
-        film.removeLikeFromUserId(userId);
+        filmStorage.deleteLike(film, userId);
     }
 
     public List<Film> showMostPopularFilms(Integer count) {
-        return filmStorage.findAll()
-                .stream()
-                .sorted((f1, f2) -> compare(f1.getLikeFromUserId().size(), f2.getLikeFromUserId().size()))
-                .limit(count)
-                .collect(Collectors.toList());
-    }
-
-    private int compare(Integer f1, Integer f2) {
-        return f1.compareTo(f2) * -1;
+        return filmStorage.showMostPopularFilms(count);
     }
 }
