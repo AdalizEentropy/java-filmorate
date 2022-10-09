@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -48,6 +49,20 @@ public class ExceptionApiHandler {
     public ErrorMessage handleValidationException(final ValidationException e) {
         String error = Objects.requireNonNull(e.getMessage());
         log.warn(error);
+
+        return new ErrorMessage(LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                error);
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleDuplicateKeyException(final DuplicateKeyException e) {
+        var iii = e.getLocalizedMessage();
+        var iii2 = e.getStackTrace();
+        String error = "Such entity already exist";
+        log.error(error);
 
         return new ErrorMessage(LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),

@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.dao;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
@@ -16,20 +18,17 @@ import java.util.List;
 
 @Component("filmDbStorage")
 @Slf4j
+@AllArgsConstructor
 public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbcTemplate;
-
-    public FilmDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public List<Film> findAll() {
         String sqlQuery =
                 "SELECT * " +
                 "FROM films " +
-                "ORDER BY id;";
+                "ORDER BY id DESC;";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToFilm);
     }
@@ -91,9 +90,12 @@ public class FilmDbStorage implements FilmStorage {
                 "INSERT INTO likes " +
                 "VALUES (?, ?);";
 
-        jdbcTemplate.update(sqlQuery,
-                userId,
-                film.getId());
+        try {
+            jdbcTemplate.update(sqlQuery, userId, film.getId());
+        } catch (DuplicateKeyException e) {
+            throw new DuplicateKeyException(String.format("Like on filmId %s from userId %s already exist",
+                    film.getId(), userId));
+        }
 
         log.info("Like added: userId = {}, filmId = {}", userId, film.getId());
     }
@@ -145,12 +147,8 @@ public class FilmDbStorage implements FilmStorage {
                 "SELECT user_id " +
                         "FROM likes " +
                         "WHERE film_id = ? " +
-                        "ORDER BY user_id;";
+                        "ORDER BY user_id DESC;";
 
-        return jdbcTemplate.query(sqlQuery, this::mapRowToUserId, filmId);
-    }
-
-    private Long mapRowToUserId(ResultSet rs, int rowNum) throws SQLException {
-        return rs.getLong("user_id");
+        return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> rs.getLong("user_id"), filmId);
     }
 }

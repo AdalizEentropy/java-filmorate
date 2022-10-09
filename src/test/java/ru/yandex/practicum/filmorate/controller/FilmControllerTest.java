@@ -145,7 +145,7 @@ class FilmControllerTest {
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateFilmWithIncorrectId() throws Exception {
         String errorMessage = "Film with such ID does not exist";
-        changedFilm.setId(2L);
+        changedFilm.setId(-2L);
 
         mockMvc.perform(
                         post("/films")

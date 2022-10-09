@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.dao;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -17,20 +18,17 @@ import java.util.List;
 
 @Component("userDbStorage")
 @Slf4j
+@AllArgsConstructor
 public class UserDbStorage implements UserStorage {
 
     private final JdbcTemplate jdbcTemplate;
-
-    public UserDbStorage(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public List<User> findAll() {
         String sqlQuery =
                 "SELECT * " +
                 "FROM users " +
-                "ORDER BY id;";
+                "ORDER BY id DESC;";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToUser);
     }
@@ -124,7 +122,7 @@ public class UserDbStorage implements UserStorage {
                 "FROM friendship fs " +
                 "JOIN users u ON fs.friend_id = u.id " +
                 "WHERE fs.user_id = ? " +
-                "ORDER BY u.id;";
+                "ORDER BY u.id DESC;";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToUser, user.getId());
     }
@@ -139,7 +137,8 @@ public class UserDbStorage implements UserStorage {
                     "WHERE user_id = ?) fs_friend " +
                     "ON fs_user.friend_id = fs_friend.friend_id " +
                 "JOIN users u ON fs_friend.friend_id = u.id " +
-                "WHERE fs_user.user_id = ?";
+                "WHERE fs_user.user_id = ? " +
+                "ORDER BY u.id DESC";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToUser, user.getId(), friend.getId());
     }
@@ -165,10 +164,6 @@ public class UserDbStorage implements UserStorage {
                 "WHERE user_id = ? " +
                 "ORDER BY friend_id;";
 
-        return jdbcTemplate.query(sqlQuery, this::mapRowToFriendId, userId);
-    }
-
-    private Long mapRowToFriendId(ResultSet rs, int rowNum) throws SQLException {
-        return rs.getLong("friend_id");
+        return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> rs.getLong("friend_id"), userId);
     }
 }

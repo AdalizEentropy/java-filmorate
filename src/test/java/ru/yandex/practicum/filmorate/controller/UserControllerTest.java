@@ -1,7 +1,11 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +16,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.dao.UserDbStorage;
 
 import java.time.LocalDate;
 import java.util.Objects;
@@ -27,9 +32,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 class UserControllerTest {
     @Autowired
-    private MockMvc mockMvc;
-    @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
 
     final User newUser = User.builder()
             .email("mail@mail.ru")
@@ -140,7 +145,7 @@ class UserControllerTest {
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateUserWithIncorrectId() throws Exception {
         String errorMessage = "User with such ID does not exist";
-        changedUser.setId(2L);
+        changedUser.setId(-2L);
 
         mockMvc.perform(
                 post("/users")
