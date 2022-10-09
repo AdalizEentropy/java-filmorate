@@ -13,10 +13,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 @Data
 @Builder
@@ -47,5 +44,15 @@ public class Film {
 
     public void removeLikeFromUserId(Long id) {
         this.likeFromUserId.remove(id);
+    }
+
+    public Map<String, Object> mapFilmToRow() {
+        Map<String, Object> values = new HashMap<>();
+        values.put("film_name", name);
+        values.put("description", description);
+        values.put("release_date", releaseDate);
+        values.put("duration", duration);
+        values.put("rate", rate);
+        return values;
     }
 }

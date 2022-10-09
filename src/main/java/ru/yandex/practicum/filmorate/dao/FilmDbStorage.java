@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
@@ -28,7 +27,7 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery =
                 "SELECT * " +
                 "FROM films " +
-                "ORDER BY id DESC;";
+                "ORDER BY film_id DESC;";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToFilm);
     }
@@ -37,9 +36,9 @@ public class FilmDbStorage implements FilmStorage {
     public Film create(Film film) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("films")
-                .usingGeneratedKeyColumns("id");
-        Number id = simpleJdbcInsert.executeAndReturnKey(new BeanPropertySqlParameterSource(film));
-        film.setId(id.longValue());
+                .usingGeneratedKeyColumns("film_id");
+
+        film.setId(simpleJdbcInsert.executeAndReturnKey(film.mapFilmToRow()).longValue());
 
         log.info("Saved: {}", film);
 
@@ -50,12 +49,12 @@ public class FilmDbStorage implements FilmStorage {
     public Film update(Film film) {
         String sqlQuery =
                 "UPDATE films " +
-                "SET name = ?, " +
+                "SET film_name = ?, " +
                     "description = ?, " +
                     "release_date = ?, " +
                     "duration = ?, " +
                     "rate = ? " +
-                "WHERE id = ?;";
+                "WHERE film_id = ?;";
 
         jdbcTemplate.update(sqlQuery,
                 film.getName(),
@@ -75,7 +74,7 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery =
                 "SELECT * " +
                 "FROM films " +
-                "WHERE id = ?;";
+                "WHERE film_id = ?;";
 
         try {
             return jdbcTemplate.queryForObject(sqlQuery, this::mapRowToFilm, filmId);
@@ -119,9 +118,9 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery =
                 "SELECT f.* " +
                 "FROM films f " +
-                "LEFT JOIN likes l ON f.id = l.film_id " +
-                "GROUP BY l.film_id, f.id " +
-                "ORDER BY COUNT(l.user_id) DESC, f.id DESC " +
+                "LEFT JOIN likes l ON f.film_id = l.film_id " +
+                "GROUP BY l.film_id, f.film_id " +
+                "ORDER BY COUNT(l.user_id) DESC, f.film_id DESC " +
                 "LIMIT ?";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToFilm, count);
@@ -129,15 +128,15 @@ public class FilmDbStorage implements FilmStorage {
 
     private Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
         Film film = Film.builder()
-                .id(rs.getLong("id"))
-                .name(rs.getString("name"))
+                .id(rs.getLong("film_id"))
+                .name(rs.getString("film_name"))
                 .description(rs.getString("description"))
                 .releaseDate(rs.getDate("release_date").toLocalDate())
                 .duration(rs.getLong("duration"))
                 .rate(rs.getInt("rate"))
                 .build();
 
-        showLikeFromUserId(rs.getLong("id")).forEach(film::addLikeFromUserId);
+        showLikeFromUserId(rs.getLong("film_id")).forEach(film::addLikeFromUserId);
 
         return film;
     }

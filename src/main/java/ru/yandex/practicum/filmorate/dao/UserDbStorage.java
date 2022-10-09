@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
@@ -28,7 +27,7 @@ public class UserDbStorage implements UserStorage {
         String sqlQuery =
                 "SELECT * " +
                 "FROM users " +
-                "ORDER BY id DESC;";
+                "ORDER BY user_id DESC;";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToUser);
     }
@@ -37,9 +36,9 @@ public class UserDbStorage implements UserStorage {
     public User create(User user) {
         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("users")
-                .usingGeneratedKeyColumns("id");
-        Number id = simpleJdbcInsert.executeAndReturnKey(new BeanPropertySqlParameterSource(user));
-        user.setId(id.longValue());
+                .usingGeneratedKeyColumns("user_id");
+
+        user.setId(simpleJdbcInsert.executeAndReturnKey(user.mapUserToRow()).longValue());
 
         log.info("Saved: {}", user);
 
@@ -52,9 +51,9 @@ public class UserDbStorage implements UserStorage {
                 "UPDATE users " +
                 "SET email = ?, " +
                     "login = ?, " +
-                    "name = ?, " +
+                    "user_name = ?, " +
                     "birthday = ? " +
-                "WHERE id = ?;";
+                "WHERE user_id = ?;";
 
         jdbcTemplate.update(sqlQuery,
                 user.getEmail(),
@@ -77,7 +76,7 @@ public class UserDbStorage implements UserStorage {
         String sqlQuery =
                 "SELECT * " +
                 "FROM users " +
-                "WHERE id = ?;";
+                "WHERE user_id = ?;";
 
         try {
             return jdbcTemplate.queryForObject(sqlQuery, this::mapRowToUser, userId);
@@ -120,9 +119,9 @@ public class UserDbStorage implements UserStorage {
         String sqlQuery =
                 "SELECT u.* " +
                 "FROM friendship fs " +
-                "JOIN users u ON fs.friend_id = u.id " +
+                "JOIN users u ON fs.friend_id = u.user_id " +
                 "WHERE fs.user_id = ? " +
-                "ORDER BY u.id DESC;";
+                "ORDER BY u.user_id DESC;";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToUser, user.getId());
     }
@@ -136,23 +135,23 @@ public class UserDbStorage implements UserStorage {
                     "FROM friendship " +
                     "WHERE user_id = ?) fs_friend " +
                     "ON fs_user.friend_id = fs_friend.friend_id " +
-                "JOIN users u ON fs_friend.friend_id = u.id " +
+                "JOIN users u ON fs_friend.friend_id = u.user_id " +
                 "WHERE fs_user.user_id = ? " +
-                "ORDER BY u.id DESC";
+                "ORDER BY u.user_id DESC";
 
         return jdbcTemplate.query(sqlQuery, this::mapRowToUser, user.getId(), friend.getId());
     }
 
     private User mapRowToUser(ResultSet rs, int rowNum) throws SQLException {
         User user = User.builder()
-                .id(rs.getLong("id"))
+                .id(rs.getLong("user_id"))
                 .email(rs.getString("email"))
                 .login(rs.getString("login"))
-                .name(rs.getString("name"))
+                .name(rs.getString("user_name"))
                 .birthday(rs.getDate("birthday").toLocalDate())
                 .build();
 
-        showFriendsId(rs.getLong("id")).forEach(user::addFriend);
+        showFriendsId(rs.getLong("user_id")).forEach(user::addFriend);
 
         return user;
     }

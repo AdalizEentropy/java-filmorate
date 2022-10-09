@@ -9,9 +9,7 @@ import lombok.Data;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 @Data
 @Builder
@@ -40,5 +38,14 @@ public class User {
 
     public void removeFriend(Long id) {
         this.friends.remove(id);
+    }
+
+    public Map<String, Object> mapUserToRow() {
+        Map<String, Object> values = new HashMap<>();
+        values.put("email", email);
+        values.put("login", login);
+        values.put("user_name", name);
+        values.put("birthday", birthday);
+        return values;
     }
 }
