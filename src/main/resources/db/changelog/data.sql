@@ -10,7 +10,7 @@ INSERT INTO mpa VALUES (5, 'NC-17', 'The film is not allowed fro persons under 1
 --changeset filmorate_sql:initial_genre_data
 
 INSERT INTO genres VALUES (1, 'Комедия');
-INSERT INTO genres VALUES (2, 'Drama');
+INSERT INTO genres VALUES (2, 'Драма');
 INSERT INTO genres VALUES (3, 'Cartoon');
 INSERT INTO genres VALUES (4, 'Thriller');
 INSERT INTO genres VALUES (5, 'Documentary');

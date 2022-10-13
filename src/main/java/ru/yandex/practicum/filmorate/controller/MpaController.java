@@ -30,7 +30,7 @@ public class MpaController {
     @GetMapping("/{id}")
     @ResponseStatus(code = HttpStatus.OK)
     @Operation(summary = "Получение mpa по id")
-    public Mpa getFilmById(@PathVariable Integer id) {
+    public Mpa getMpaById(@PathVariable Integer id) {
         return mpaService.getMpaById(id);
     }
 }
