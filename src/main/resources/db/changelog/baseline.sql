@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users
 CREATE TABLE IF NOT EXISTS mpa
 (
     mpa_id INTEGER PRIMARY KEY,
-    code varchar(10) UNIQUE NOT NULL,
+    mpa_name varchar(10) UNIQUE NOT NULL,
     description varchar(200)
 );
 
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS films
     release_date date,
     duration bigint,
     rate integer,
-    mpa integer REFERENCES mpa (mpa_id)
+    mpa_id integer REFERENCES mpa (mpa_id)
 );
 
 CREATE TABLE IF NOT EXISTS genres

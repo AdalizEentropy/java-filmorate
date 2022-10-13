@@ -1,12 +1,9 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
+import com.sun.istack.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.model.enums.Genre;
-import ru.yandex.practicum.filmorate.model.enums.Mpa;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateValid;
 
 import javax.validation.constraints.NotBlank;
@@ -35,7 +32,9 @@ public class Film {
 
     private Integer rate;
     private final Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
-    private List<Genre> genre;
+    private final  List<Genre> genres = new ArrayList<>();
+
+    @NotNull
     private Mpa mpa;
 
     public void addLikeFromUserId(Long id) {
@@ -46,13 +45,7 @@ public class Film {
         this.likeFromUserId.remove(id);
     }
 
-    public Map<String, Object> mapFilmToRow() {
-        Map<String, Object> values = new HashMap<>();
-        values.put("film_name", name);
-        values.put("description", description);
-        values.put("release_date", releaseDate);
-        values.put("duration", duration);
-        values.put("rate", rate);
-        return values;
+    public void addGenre(Genre genre) {
+        this.genres.add(genre);
     }
 }

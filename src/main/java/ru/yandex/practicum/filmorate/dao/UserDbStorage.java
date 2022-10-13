@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.dao;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -15,6 +16,7 @@ import ru.yandex.practicum.filmorate.model.enums.FriendStatus;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
+import java.util.Optional;
 
 import static ru.yandex.practicum.filmorate.dao.utils.UserMapping.mapUserToRow;
 import static ru.yandex.practicum.filmorate.model.enums.FriendStatus.APPROVED;
@@ -28,8 +30,6 @@ public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
 
     @Override
-    // В реально жизни врядли кто-то будет выводить список всех юзеров вместе с их друзьями
-    // но 100500 селектов в БД по каждому юзеру - тож так себе... Можно конечно кинуть один запрос, где будет list..
     public List<User> findAll() {
         String sqlQuery =
                 "SELECT u.*, " +

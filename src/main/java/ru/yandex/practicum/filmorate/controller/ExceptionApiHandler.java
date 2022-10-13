@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -58,10 +59,8 @@ public class ExceptionApiHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorMessage handleDuplicateKeyException(final DuplicateKeyException e) {
-        var iii = e.getLocalizedMessage();
-        var iii2 = e.getStackTrace();
-        String error = "Such entity already exist";
+    public ErrorMessage handleHttpMessageNotReadableException (final HttpMessageNotReadableException e) {
+        String error = "Json parse error";
         log.error(error);
 
         return new ErrorMessage(LocalDateTime.now(),
@@ -75,6 +74,7 @@ public class ExceptionApiHandler {
     public ErrorMessage handleThrowable(final Throwable e) {
         String error = "Unexpected error";
         log.error(error);
+        e.printStackTrace();
 
         return new ErrorMessage(LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
