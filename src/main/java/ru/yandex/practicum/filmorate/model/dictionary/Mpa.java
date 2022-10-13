@@ -1,6 +1,5 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.model.dictionary;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,6 +8,5 @@ import lombok.Data;
 public class Mpa {
 
     private Integer id;
-
     private String name;
 }

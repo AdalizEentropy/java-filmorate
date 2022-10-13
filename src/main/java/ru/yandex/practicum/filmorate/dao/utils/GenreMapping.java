@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.dao.utils;
 
-import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.dictionary.Genre;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

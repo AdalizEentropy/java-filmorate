@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sun.istack.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.model.dictionary.Genre;
+import ru.yandex.practicum.filmorate.model.dictionary.Mpa;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateValid;
 
 import javax.validation.constraints.NotBlank;

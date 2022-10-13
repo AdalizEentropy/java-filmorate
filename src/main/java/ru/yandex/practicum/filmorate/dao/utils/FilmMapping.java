@@ -2,8 +2,8 @@ package ru.yandex.practicum.filmorate.dao.utils;
 
 import lombok.AllArgsConstructor;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.dictionary.Genre;
+import ru.yandex.practicum.filmorate.model.dictionary.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
