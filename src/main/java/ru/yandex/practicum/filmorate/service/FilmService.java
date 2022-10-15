@@ -4,10 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.dictionary.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class FilmService {
@@ -30,7 +34,9 @@ public class FilmService {
     }
 
     public Film update(Film film) {
+        // Check that such film exist
         getFilmById(film.getId());
+
         return filmStorage.update(film);
     }
 
@@ -39,6 +45,7 @@ public class FilmService {
     }
 
     public void addLike(Long filmId, Long userId) {
+        // Check that such film and user exist
         userStorage.getById(userId);
         Film film = getFilmById(filmId);
 
@@ -46,6 +53,7 @@ public class FilmService {
     }
 
     public void deleteLike(Long filmId, Long userId) {
+        // Check that such film and user exist
         userStorage.getById(userId);
         Film film = getFilmById(filmId);
 

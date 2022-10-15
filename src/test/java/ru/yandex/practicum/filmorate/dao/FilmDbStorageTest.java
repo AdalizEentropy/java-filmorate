@@ -8,11 +8,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.test.context.jdbc.Sql;
+import ru.yandex.practicum.filmorate.exception.DuplicateException;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.dictionary.Genre;
 
 import java.util.List;
 import java.util.Set;
@@ -48,6 +49,8 @@ class FilmDbStorageTest {
 
         assertThat(films.size()).isEqualTo(1);
         assertThat(films.get(0)).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(films.get(0).getMpa().getId()).isEqualTo(createNewFilm1().getMpa().getId());
+        assertThat(films.get(0).getMpa().getName()).isEqualTo("G");
     }
 
     @Test
@@ -58,8 +61,8 @@ class FilmDbStorageTest {
         List<Film> films = filmStorage.findAll();
 
         assertThat(films.size()).isEqualTo(2);
-        assertThat(films.get(0)).hasFieldOrPropertyWithValue("id", film2.getId());
-        assertThat(films.get(1)).hasFieldOrPropertyWithValue("id", film1.getId());
+        assertThat(films.get(0)).hasFieldOrPropertyWithValue("id", film1.getId());
+        assertThat(films.get(1)).hasFieldOrPropertyWithValue("id", film2.getId());
     }
 
     @Test
@@ -90,15 +93,18 @@ class FilmDbStorageTest {
     @Test
     @DisplayName("Check that can receive film by id")
     void shouldGetFilmById() {
-        Film film = filmStorage.create(createNewFilm2());
+        Film createFilm = createNewFilm2();
+        Film film = filmStorage.create(createFilm);
         Film receivedFilm = filmStorage.getById(film.getId());
 
         assertThat(receivedFilm).hasFieldOrPropertyWithValue("id", film.getId());
-        assertThat(receivedFilm).hasFieldOrPropertyWithValue("name", createNewFilm2().getName());
-        assertThat(receivedFilm).hasFieldOrPropertyWithValue("description", createNewFilm2().getDescription());
-        assertThat(receivedFilm).hasFieldOrPropertyWithValue("releaseDate", createNewFilm2().getReleaseDate());
-        assertThat(receivedFilm).hasFieldOrPropertyWithValue("duration", createNewFilm2().getDuration());
-        assertThat(receivedFilm).hasFieldOrPropertyWithValue("rate", createNewFilm2().getRate());
+        assertThat(receivedFilm).hasFieldOrPropertyWithValue("name", createFilm.getName());
+        assertThat(receivedFilm).hasFieldOrPropertyWithValue("description", createFilm.getDescription());
+        assertThat(receivedFilm).hasFieldOrPropertyWithValue("releaseDate", createFilm.getReleaseDate());
+        assertThat(receivedFilm).hasFieldOrPropertyWithValue("duration", createFilm.getDuration());
+        assertThat(receivedFilm).hasFieldOrPropertyWithValue("rate", createFilm.getRate());
+        assertThat(receivedFilm.getMpa().getId()).isEqualTo(createFilm.getMpa().getId());
+        assertThat(receivedFilm.getMpa().getName()).isEqualTo("PG");
     }
 
     @Test
@@ -153,10 +159,15 @@ class FilmDbStorageTest {
 
         filmStorage.addLike(film, user.getId());
 
-        final DuplicateKeyException exception = assertThrows(DuplicateKeyException.class,
+        final DuplicateException exception = assertThrows(DuplicateException.class,
                 () -> filmStorage.addLike(film, user.getId()));
 
+        Film returnedFilm = filmStorage.getById(film.getId());
+
+        assertThat(returnedFilm.getLikeFromUserId().size()).isEqualTo(1);
+        assertThat((returnedFilm.getLikeFromUserId().toArray())[0]).isEqualTo(user.getId());
         assertEquals(errorMessage, exception.getMessage());
+
     }
 
     @Test
@@ -180,10 +191,12 @@ class FilmDbStorageTest {
     void shouldNotDeleteNonexistentLike() {
         User user = userStorage.create(createNewUser1());
         Film film = filmStorage.create(createNewFilm1());
-        filmStorage.deleteLike(film, user.getId());
-        Film filmFromDb = filmStorage.getById(film.getId());
+        String errorMessage = String.format("Like on filmId %s from userId %s not found", film.getId(), user.getId());
 
-        assertThat(filmFromDb.getLikeFromUserId().size()).isEqualTo(0);
+        final EntityNotFoundException exception = assertThrows(EntityNotFoundException.class,
+                () -> filmStorage.deleteLike(film, user.getId()));
+
+        assertEquals(errorMessage, exception.getMessage());
     }
 
     @ParameterizedTest(name = "#{index} - Check that can show {0} most popular films")
@@ -206,5 +219,245 @@ class FilmDbStorageTest {
         List<Film> popularFilms = filmStorage.showMostPopularFilms(10);
 
         assertThat(popularFilms.size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("Check that films' list has film with genres")
+    void shouldFindFilmWithGenres() {
+        Film film = createNewFilm1();
+        film.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        filmStorage.create(film);
+        List<Film> films = filmStorage.findAll();
+
+        assertThat(films.size()).isEqualTo(1);
+        assertThat(films.get(0)).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(films.get(0).getGenres().size()).isEqualTo(1);
+        assertThat((films.get(0).getGenres().toArray())[0])
+                .hasFieldOrPropertyWithValue("id", 1);
+        assertThat((films.get(0).getGenres().toArray())[0])
+                .hasFieldOrPropertyWithValue("name", "Комедия");
+    }
+
+    @Test
+    @DisplayName("Check that films' list has film with two genres")
+    void shouldFindFilmWithTwoGenres() {
+        Film film = createNewFilm1();
+        film.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        film.addGenre(Genre.builder()
+                .id(2)
+                .build());
+
+        filmStorage.create(film);
+        List<Film> films = filmStorage.findAll();
+
+        assertThat(films.size()).isEqualTo(1);
+        assertThat(films.get(0)).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(films.get(0).getGenres().size()).isEqualTo(2);
+        assertThat((films.get(0).getGenres().toArray())[0])
+                .hasFieldOrPropertyWithValue("id", 1);
+        assertThat((films.get(0).getGenres().toArray())[0])
+                .hasFieldOrPropertyWithValue("name", "Комедия");
+        assertThat((films.get(0).getGenres().toArray())[1])
+                .hasFieldOrPropertyWithValue("id", 2);
+        assertThat((films.get(0).getGenres().toArray())[1])
+                .hasFieldOrPropertyWithValue("name", "Драма");
+    }
+
+    @Test
+    @DisplayName("Check that films' list has film with unique genres")
+    void shouldFindFilmWithUniqueGenres() {
+        Film film = createNewFilm1();
+        film.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        film.addGenre(Genre.builder()
+                .id(2)
+                .build());
+
+        film.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        filmStorage.create(film);
+        List<Film> films = filmStorage.findAll();
+
+        assertThat(films.size()).isEqualTo(1);
+        assertThat(films.get(0)).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(films.get(0).getGenres().size()).isEqualTo(2);
+        assertThat((films.get(0).getGenres().toArray())[0])
+                .hasFieldOrPropertyWithValue("id", 1);
+        assertThat((films.get(0).getGenres().toArray())[0])
+                .hasFieldOrPropertyWithValue("name", "Комедия");
+        assertThat((films.get(0).getGenres().toArray())[1])
+                .hasFieldOrPropertyWithValue("id", 2);
+        assertThat((films.get(0).getGenres().toArray())[1])
+                .hasFieldOrPropertyWithValue("name", "Драма");
+    }
+
+    @Test
+    @DisplayName("Check that films' list has film with likes")
+    void shouldFindFilmWithLikes() {
+        Film film = createNewFilm1();
+        User user = createNewUser1();
+        filmStorage.create(film);
+        userStorage.create(user);
+        filmStorage.addLike(film, user.getId());
+        List<Film> films = filmStorage.findAll();
+
+        assertThat(films.size()).isEqualTo(1);
+        assertThat(films.get(0)).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(films.get(0).getLikeFromUserId().size()).isEqualTo(1);
+        assertThat((films.get(0).getLikeFromUserId().toArray())[0]).isEqualTo(user.getId());
+    }
+
+    @Test
+    @DisplayName("Check that films' list has film with two likes")
+    void shouldFindFilmWithTwoLikes() {
+        Film film = createNewFilm1();
+        User user1 = createNewUser1();
+        User user2 = createNewUser2();
+        filmStorage.create(film);
+        userStorage.create(user1);
+        userStorage.create(user2);
+        filmStorage.addLike(film, user1.getId());
+        filmStorage.addLike(film, user2.getId());
+        List<Film> films = filmStorage.findAll();
+
+        assertThat(films.size()).isEqualTo(1);
+        assertThat(films.get(0)).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(films.get(0).getLikeFromUserId().size()).isEqualTo(2);
+        assertThat((films.get(0).getLikeFromUserId().toArray())[0]).isEqualTo(user1.getId());
+        assertThat((films.get(0).getLikeFromUserId().toArray())[1]).isEqualTo(user2.getId());
+    }
+
+    @Test
+    @DisplayName("Check that can receive film by id with genres")
+    void shouldGetFilmByIdWithGenres() {
+        Film createFilm = createNewFilm2();
+        createFilm.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        Film film = filmStorage.create(createFilm);
+        Film receivedFilm = filmStorage.getById(film.getId());
+
+        assertThat(receivedFilm).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(receivedFilm.getGenres().size()).isEqualTo(1);
+        assertThat((receivedFilm.getGenres().toArray())[0]).hasFieldOrPropertyWithValue("id", 1);
+        assertThat((receivedFilm.getGenres().toArray())[0]).hasFieldOrPropertyWithValue("name", "Комедия");
+    }
+
+    @Test
+    @DisplayName("Check that can receive film by id with unique genres")
+    void shouldGetFilmByIdWithUniqueGenres() {
+        Film createFilm = createNewFilm2();
+        createFilm.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        createFilm.addGenre(Genre.builder()
+                .id(2)
+                .build());
+
+        createFilm.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        Film film = filmStorage.create(createFilm);
+        Film receivedFilm = filmStorage.getById(film.getId());
+
+        assertThat(receivedFilm).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(receivedFilm.getGenres().size()).isEqualTo(2);
+        assertThat((receivedFilm.getGenres().toArray())[0]).hasFieldOrPropertyWithValue("id", 1);
+        assertThat((receivedFilm.getGenres().toArray())[0]).hasFieldOrPropertyWithValue("name", "Комедия");
+        assertThat((receivedFilm.getGenres().toArray())[1]).hasFieldOrPropertyWithValue("id", 2);
+        assertThat((receivedFilm.getGenres().toArray())[1]).hasFieldOrPropertyWithValue("name", "Драма");
+    }
+
+    @Test
+    @DisplayName("Check that can receive film by id with likes")
+    void shouldFindByIdFilmWithLikes() {
+        Film createFilm = createNewFilm1();
+        User user = createNewUser1();
+        Film film = filmStorage.create(createFilm);
+        userStorage.create(user);
+        filmStorage.addLike(createFilm, user.getId());
+        Film returnedFilm = filmStorage.getById(film.getId());
+
+        assertThat(returnedFilm.getLikeFromUserId().size()).isEqualTo(1);
+        assertThat((returnedFilm.getLikeFromUserId().toArray())[0]).isEqualTo(user.getId());
+    }
+
+    @Test
+    @DisplayName("Check that film was updated with genres")
+    void shouldUpdateFilmWithGenres() {
+        Film createFilm = createNewFilm1();
+        Film updateFilm = createUpdatedFilm1();
+        createFilm.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        updateFilm.addGenre(Genre.builder()
+                .id(3)
+                .build());
+        updateFilm.addGenre(Genre.builder()
+                .id(2)
+                .build());
+
+        Film film = filmStorage.create(createFilm);
+        updateFilm.setId(film.getId());
+        filmStorage.update(updateFilm);
+
+        Film returnedFilm = filmStorage.getById(film.getId());
+
+        assertThat(returnedFilm).hasFieldOrPropertyWithValue("id", film.getId());
+        assertThat(returnedFilm.getGenres().size()).isEqualTo(2);
+        assertThat((returnedFilm.getGenres().toArray())[0]).hasFieldOrPropertyWithValue("id", 2);
+        assertThat((returnedFilm.getGenres().toArray())[0]).hasFieldOrPropertyWithValue("name", "Драма");
+        assertThat((returnedFilm.getGenres().toArray())[1]).hasFieldOrPropertyWithValue("id", 3);
+        assertThat((returnedFilm.getGenres().toArray())[1])
+                .hasFieldOrPropertyWithValue("name", "Мультфильм");
+    }
+
+    @Test
+    @DisplayName("Check that can show most popular films with genres")
+    void shouldShowMostPopularFilmsWithGenres() {
+        Film createFilm = createNewFilm1();
+        createFilm.addGenre(Genre.builder()
+                .id(1)
+                .build());
+
+        filmStorage.create(createFilm);
+        Film film2 = filmStorage.create(createNewFilm2());
+
+        List<Film> popularFilms = filmStorage.showMostPopularFilms(2);
+        assertThat(popularFilms.size()).isEqualTo(2);
+        assertThat(popularFilms.get(0)).hasFieldOrPropertyWithValue("id", film2.getId());;
+        assertThat((popularFilms.get(0).getGenres().size())).isEqualTo(0);
+        assertThat((popularFilms.get(1).getGenres().toArray())[0]).hasFieldOrPropertyWithValue("id", 1);
+        assertThat((popularFilms.get(1).getGenres().toArray())[0])
+                .hasFieldOrPropertyWithValue("name", "Комедия");
+    }
+
+    @Test
+    @DisplayName("Check that can show most popular films with likes")
+    void shouldShowMostPopularFilmsWithLikes() {
+        User user = userStorage.create(createNewUser1());
+        Film film1 = filmStorage.create(createNewFilm1());
+        filmStorage.create(createNewFilm2());
+        filmStorage.addLike(film1, user.getId());
+
+        List<Film> popularFilms = filmStorage.showMostPopularFilms(2);
+        assertThat(popularFilms.size()).isEqualTo(2);
+        assertThat(popularFilms.get(0)).hasFieldOrPropertyWithValue("id", film1.getId());
+        assertThat((popularFilms.get(0).getLikeFromUserId().toArray())[0]).isEqualTo(user.getId());
+        assertThat((popularFilms.get(1).getLikeFromUserId().size())).isEqualTo(0);
     }
 }

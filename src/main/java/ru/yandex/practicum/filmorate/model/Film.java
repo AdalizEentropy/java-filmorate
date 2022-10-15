@@ -34,7 +34,7 @@ public class Film {
 
     private Integer rate;
     private final Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
-    private final  List<Genre> genres = new ArrayList<>();
+    private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
 
     @NotNull
     private Mpa mpa;

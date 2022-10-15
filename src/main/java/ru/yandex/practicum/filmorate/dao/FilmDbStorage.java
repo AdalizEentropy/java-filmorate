@@ -31,7 +31,7 @@ public class FilmDbStorage implements FilmStorage {
                 "SELECT f.*, m.mpa_name " +
                 "FROM films f " +
                 "JOIN mpa m ON f.mpa_id = m.mpa_id " +
-                "ORDER BY f.film_id DESC;";
+                "ORDER BY f.film_id;";
 
         List<Film> films = jdbcTemplate.query(sqlQuery, FilmMapping::mapRowToFilm);
         Map<Long, Film> tmpFilmMap = new HashMap<>();
@@ -89,6 +89,11 @@ public class FilmDbStorage implements FilmStorage {
                 film.getRate(),
                 film.getMpa().getId(),
                 film.getId());
+
+        // Check genres for film
+        if (film.getGenres().isEmpty() || !new ArrayList<>(film.getGenres()).equals(showFilmGenres(film.getId()))) {
+            deleteFilmGenres(film.getId());
+        }
 
         // Set genres for film
         Optional.ofNullable(film.getGenres())
@@ -208,7 +213,7 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
-    private void addFilmGenres(Long filmId, List<Genre> genres) {
+    private void addFilmGenres(Long filmId, Set<Genre> genres) {
         String checkSqlQuery =
                 "SELECT film_id " +
                 "FROM film_genre " +
@@ -226,6 +231,14 @@ public class FilmDbStorage implements FilmStorage {
                 jdbcTemplate.update(sqlQuery, filmId, genre.getId());
             }
         }
+    }
+
+    private void deleteFilmGenres(Long filmId) {
+        String sqlQuery =
+                "DELETE FROM film_genre " +
+                "WHERE film_id = ?;";
+
+        jdbcTemplate.update(sqlQuery, filmId);
     }
 
     private List<Long> showLikesFromUserId(Long filmId) {
