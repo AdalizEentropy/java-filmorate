@@ -2,11 +2,11 @@ package ru.yandex.practicum.filmorate.dao;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.dao.utils.FriendshipMapping;
 import ru.yandex.practicum.filmorate.dao.utils.UserMapping;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -15,8 +15,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.model.enums.FriendStatus;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static ru.yandex.practicum.filmorate.dao.utils.UserMapping.mapUserToRow;
 import static ru.yandex.practicum.filmorate.model.enums.FriendStatus.APPROVED;
@@ -32,14 +31,20 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> findAll() {
         String sqlQuery =
-                "SELECT u.*, " +
-                    "GROUP_CONCAT(fs.friend_id ORDER BY fs.friend_id DESC) AS friends " +
-                "FROM users u " +
-                "LEFT JOIN friendship fs ON u.user_id = fs.user_id " +
-                "GROUP BY u.user_id " +
-                "ORDER BY u.user_id DESC;";
+                "SELECT * " +
+                "FROM users " +
+                "ORDER BY user_id DESC;";
 
-        return jdbcTemplate.query(sqlQuery, UserMapping::mapRowToUserWithFriendList);
+        List<User> users = jdbcTemplate.query(sqlQuery, UserMapping::mapRowToUser);
+        Map<Long, User> tmpUserMap = new HashMap<>();
+        users.forEach(user -> tmpUserMap.put(user.getId(), user));
+
+        // Take friends for all users
+        findAllFriends().ifPresent(friends -> friends
+                .forEach(friend -> friend
+                        .forEach((key, value) -> tmpUserMap.get(key).addFriend(value.getFriendId()))));
+
+        return users;
     }
 
     @Override
@@ -86,11 +91,10 @@ public class UserDbStorage implements UserStorage {
 
         try {
             User user = jdbcTemplate.queryForObject(sqlQuery, UserMapping::mapRowToUser, userId);
-            List<Friendship> friends = findFriends(userId);
 
-            friends.stream()
-                    .map(Friendship::getFriendId)
-                    .forEach(friend -> user.addFriend(friend));
+            // Take friends for user
+            findFriends(userId).ifPresent(friendships -> friendships
+                    .forEach(friendship -> Objects.requireNonNull(user).addFriend(friendship.getFriendId())));
 
             return user;
 
@@ -172,35 +176,49 @@ public class UserDbStorage implements UserStorage {
     @Override
     public List<User> showFriends(User user) {
         String sqlQuery =
-                "SELECT u.*, " +
-                     "GROUP_CONCAT(fs2.friend_id ORDER BY fs2.friend_id DESC) AS friends " +
+                "SELECT u.* " +
                 "FROM friendship fs " +
                 "JOIN users u ON fs.friend_id = u.user_id " +
-                "LEFT JOIN friendship fs2 ON u.user_id = fs2.user_id " +
                 "WHERE fs.user_id = ? " +
-                "GROUP BY u.user_id " +
                 "ORDER BY u.user_id DESC;";
 
-        return jdbcTemplate.query(sqlQuery, UserMapping::mapRowToUserWithFriendList, user.getId());
+        List<User> users = jdbcTemplate.query(sqlQuery, UserMapping::mapRowToUser, user.getId());
+        Map<Long, User> tmpUserMap = new HashMap<>();
+        users.forEach(u -> tmpUserMap.put(u.getId(), u));
+
+        // Take friends for all users
+        findAllFriends().ifPresent(friends -> friends.stream()
+                .filter(f -> f.keySet().equals(tmpUserMap.keySet()))
+                .forEach(friend -> friend
+                        .forEach((key, value) -> tmpUserMap.get(key).addFriend(value.getFriendId()))));
+
+        return users;
     }
 
     @Override
     public List<User> showCommonFriends(User user, User friend) {
         String sqlQuery =
-                "SELECT u.*, " +
-                     "GROUP_CONCAT(fs2.friend_id ORDER BY fs2.friend_id DESC) AS friends " +
+                "SELECT u.* " +
                 "FROM friendship fs_user " +
                 "JOIN (SELECT * " +
                     "FROM friendship " +
                     "WHERE user_id = ?) fs_friend " +
                     "ON fs_user.friend_id = fs_friend.friend_id " +
                 "JOIN users u ON fs_friend.friend_id = u.user_id " +
-                "LEFT JOIN friendship fs2 ON u.user_id = fs2.user_id " +
                 "WHERE fs_user.user_id = ? " +
-                "GROUP BY u.user_id " +
                 "ORDER BY u.user_id DESC;";
 
-        return jdbcTemplate.query(sqlQuery, UserMapping::mapRowToUserWithFriendList, user.getId(), friend.getId());
+        List<User> users = jdbcTemplate.query(sqlQuery, UserMapping::mapRowToUser, user.getId(), friend.getId());
+        Map<Long, User> tmpUserMap = new HashMap<>();
+        users.forEach(u -> tmpUserMap.put(u.getId(), u));
+
+        // Take friends for all users
+        findAllFriends().ifPresent(friends -> friends.stream()
+                .filter(f -> f.keySet().equals(tmpUserMap.keySet()))
+                .forEach(fr -> fr
+                        .forEach((key, value) -> tmpUserMap.get(key).addFriend(value.getFriendId()))));
+
+        return users;
     }
 
     private List<Friendship> findFriendRequest(Long userId, Long friendId) {
@@ -210,18 +228,26 @@ public class UserDbStorage implements UserStorage {
                 "WHERE user_id IN (?, ?) " +
                     "AND friend_id IN (?, ?);";
 
-        return jdbcTemplate.query(findFriendRequest, UserMapping::mapRowToFriendShip,
+        return jdbcTemplate.query(findFriendRequest, FriendshipMapping::mapRowToFriendship,
                 userId, friendId,
                 friendId, userId);
     }
 
-    private List<Friendship> findFriends(Long usersId) {
-        String findFriendsId =
+    private Optional<List<Friendship>> findFriends(Long usersId) {
+        String sqlQuery =
                 "SELECT * " +
                 "FROM friendship " +
                 "WHERE user_id = ? " +
                 "ORDER BY friend_id;";
 
-        return jdbcTemplate.query(findFriendsId, UserMapping::mapRowToFriendShip, usersId);
+        return Optional.of(jdbcTemplate.query(sqlQuery, FriendshipMapping::mapRowToFriendship, usersId));
+    }
+
+    private Optional<List<Map<Long, Friendship>>> findAllFriends() {
+        String sqlQuery =
+                "SELECT * " +
+                "FROM friendship;";
+
+        return Optional.of(jdbcTemplate.query(sqlQuery, FriendshipMapping::mapRowToAllFriendship));
     }
 }
