@@ -8,13 +8,17 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.jdbc.Sql;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.dictionary.Genre;
 
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static ru.yandex.practicum.filmorate.utils.CreateTestFilm.createNewFilm1;
+import static ru.yandex.practicum.filmorate.utils.CreateTestFilm.createNewFilm2;
 import static ru.yandex.practicum.filmorate.utils.CreateTestUser.*;
 
 @SpringBootTest
@@ -24,7 +28,6 @@ import static ru.yandex.practicum.filmorate.utils.CreateTestUser.*;
 class UserDbStorageTest {
     private final UserDbStorage userStorage;
 
-    //ДОБАВИТЬ ДВУХСТОРОННЮЮ ПРОВЕРКУ ДРУЗЕЙ
     @Test
     @DisplayName("Check that users' list is empty")
     void shouldNotFindUsers() {
@@ -113,9 +116,11 @@ class UserDbStorageTest {
         User friend = userStorage.create(createNewUser2());
         userStorage.addFriend(user, friend);
         List<User> friends = userStorage.showFriends(user);
+        List<User> friendsOfFriend = userStorage.showFriends(friend);
 
         assertThat(friends.size()).isEqualTo(1);
         assertThat(friends.get(0)).hasFieldOrPropertyWithValue("id", friend.getId());
+        assertThat(friendsOfFriend.size()).isEqualTo(0);
     }
 
     @Test
@@ -181,5 +186,125 @@ class UserDbStorageTest {
 
         assertThat(commonFriends.size()).isEqualTo(1);
         assertThat(commonFriends.get(0)).hasFieldOrPropertyWithValue("id", friend.getId());
+    }
+
+    @Test
+    @DisplayName("Check that users' list has user with friends")
+    void shouldFindUserWithFriends() {
+        User user = userStorage.create(createNewUser1());
+        User friend = userStorage.create(createNewUser2());
+        userStorage.addFriend(user, friend);
+        List<User> users = userStorage.findAll();
+
+        assertThat(users.size()).isEqualTo(2);
+        assertThat(users.get(0)).hasFieldOrPropertyWithValue("id", friend.getId());
+        assertThat(users.get(0).getFriends().size()).isEqualTo(0);
+        assertThat(users.get(1)).hasFieldOrPropertyWithValue("id", user.getId());
+        assertThat((users.get(1).getFriends().toArray())[0]).isEqualTo(friend.getId());
+    }
+
+    @Test
+    @DisplayName("Check that films' list has film with two friends")
+    void shouldFindUserWithTwoFriends() {
+        User user = userStorage.create(createNewUser1());
+        User friend1 = userStorage.create(createNewUser2());
+        User friend2 = userStorage.create(createNewUser2());
+        userStorage.addFriend(user, friend1);
+        userStorage.addFriend(user, friend2);
+        List<User> users = userStorage.findAll();
+
+        assertThat(users.size()).isEqualTo(3);
+        assertThat(users.get(0)).hasFieldOrPropertyWithValue("id", friend2.getId());
+        assertThat(users.get(0).getFriends().size()).isEqualTo(0);
+        assertThat(users.get(1)).hasFieldOrPropertyWithValue("id", friend1.getId());
+        assertThat(users.get(1).getFriends().size()).isEqualTo(0);
+        assertThat(users.get(2)).hasFieldOrPropertyWithValue("id", user.getId());
+        assertThat((users.get(2).getFriends().toArray())[0]).isEqualTo(friend1.getId());
+        assertThat((users.get(2).getFriends().toArray())[1]).isEqualTo(friend2.getId());
+    }
+
+    @Test
+    @DisplayName("Check that can receive user by id with friends")
+    void shouldGetUserByIdWithFriends() {
+        User user = userStorage.create(createNewUser1());
+        User friend = userStorage.create(createNewUser2());
+        userStorage.addFriend(user, friend);
+        User receivedUser = userStorage.getById(user.getId());
+
+        assertThat(receivedUser).hasFieldOrPropertyWithValue("id", user.getId());
+        assertThat(receivedUser.getFriends().size()).isEqualTo(1);
+        assertThat((receivedUser.getFriends().toArray())[0]).isEqualTo(friend.getId());
+    }
+
+    @Test
+    @DisplayName("Check that can show friends with their friends")
+    void shouldShowUserFriendsWithTheirFriends() {
+        User user = userStorage.create(createNewUser1());
+        User friend1 = userStorage.create(createNewUser2());
+        User friend2 = userStorage.create(createNewUser2());
+        userStorage.addFriend(user, friend1);
+        userStorage.addFriend(friend1, friend2);
+        List<User> friends = userStorage.showFriends(user);
+
+        assertThat(friends.get(0)).hasFieldOrPropertyWithValue("id", friend1.getId());
+        assertThat(friends.get(0).getFriends().size()).isEqualTo(1);
+        assertThat((friends.get(0).getFriends().toArray())[0]).isEqualTo(friend2.getId());
+    }
+
+    @Test
+    @DisplayName("Check that can show common friend with their friends")
+    void shouldShowCommonFriendsWithTheirFriends() {
+        User user1 = userStorage.create(createNewUser1());
+        User user2 = userStorage.create(createNewUser2());
+        User friend = userStorage.create(createUpdatedUser1());
+        userStorage.addFriend(user1, friend);
+        userStorage.addFriend(user2, friend);
+        userStorage.addFriend(friend, user1);
+        List<User> commonFriends = userStorage.showCommonFriends(user1, user2);
+
+        assertThat(commonFriends.size()).isEqualTo(1);
+        assertThat(commonFriends.get(0)).hasFieldOrPropertyWithValue("id", friend.getId());
+        assertThat(commonFriends.get(0).getFriends().size()).isEqualTo(1);
+        assertThat((commonFriends.get(0).getFriends().toArray())[0]).isEqualTo(user1.getId());
+    }
+
+    @Test
+    @DisplayName("Check that can approve friend")
+    void shouldApproveFriend() {
+        User user = userStorage.create(createNewUser1());
+        User friend = userStorage.create(createNewUser2());
+        userStorage.addFriend(user, friend);
+        userStorage.addFriend(friend, user);
+        List<User> friends = userStorage.findAll();
+
+        assertThat(friends.size()).isEqualTo(2);
+        assertThat(friends.get(0)).hasFieldOrPropertyWithValue("id", friend.getId());
+        assertThat(friends.get(0).getFriends().size()).isEqualTo(1);
+        assertThat((friends.get(0).getFriends().toArray())[0]).isEqualTo(user.getId());
+        assertThat(friends.get(1).getFriends().size()).isEqualTo(1);
+        assertThat((friends.get(1).getFriends().toArray())[0]).isEqualTo(friend.getId());
+    }
+
+    @Test
+    @DisplayName("Check that can remove friend only from user")
+    void shouldDeleteFriendOnlyFromUser() {
+        User user = userStorage.create(createNewUser1());
+        User friend = userStorage.create(createNewUser2());
+        userStorage.addFriend(user, friend);
+        userStorage.addFriend(friend, user);
+        List<User> friends = userStorage.showFriends(user);
+        List<User> friendsOfFriend = userStorage.showFriends(friend);
+
+        assertThat(friends.size()).isEqualTo(1);
+        assertThat(friends.get(0)).hasFieldOrPropertyWithValue("id", friend.getId());
+        assertThat(friendsOfFriend.size()).isEqualTo(1);
+        assertThat(friendsOfFriend.get(0)).hasFieldOrPropertyWithValue("id", user.getId());
+
+        userStorage.deleteFriend(user, friend);
+        friends = userStorage.showFriends(user);
+        friendsOfFriend = userStorage.showFriends(friend);
+
+        assertThat(friends.size()).isEqualTo(0);
+        assertThat(friendsOfFriend.size()).isEqualTo(1);
     }
 }

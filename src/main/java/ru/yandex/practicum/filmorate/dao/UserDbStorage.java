@@ -237,8 +237,7 @@ public class UserDbStorage implements UserStorage {
         String sqlQuery =
                 "SELECT * " +
                 "FROM friendship " +
-                "WHERE user_id = ? " +
-                "ORDER BY friend_id;";
+                "WHERE user_id = ?;";
 
         return Optional.of(jdbcTemplate.query(sqlQuery, FriendshipMapping::mapRowToFriendship, usersId));
     }
