@@ -25,7 +25,7 @@ public class GenreDbStorage implements Dictionary<Genre> {
                 "FROM genres " +
                 "ORDER BY genre_id;";
 
-        return jdbcTemplate.query(sqlQuery, GenreMapping::mapRowToGenre);
+        return jdbcTemplate.query(sqlQuery, GenreMapping::mapRowToGenres);
     }
 
     @Override
@@ -36,7 +36,7 @@ public class GenreDbStorage implements Dictionary<Genre> {
                 "WHERE genre_id = ?;";
 
         try {
-            return jdbcTemplate.queryForObject(sqlQuery, GenreMapping::mapRowToGenre, genreId);
+            return jdbcTemplate.queryForObject(sqlQuery, GenreMapping::mapRowToGenres, genreId);
 
         } catch (EmptyResultDataAccessException e) {
             throw new EntityNotFoundException(String.format("Genre with ID %s does not exist", genreId));

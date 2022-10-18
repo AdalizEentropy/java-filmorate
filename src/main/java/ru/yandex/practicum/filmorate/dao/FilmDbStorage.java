@@ -15,8 +15,10 @@ import ru.yandex.practicum.filmorate.model.dictionary.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ru.yandex.practicum.filmorate.dao.utils.FilmMapping.mapFilmToRow;
+import static ru.yandex.practicum.filmorate.dao.utils.GenreMapping.mapRowToGenre;
 
 @Component("filmDbStorage")
 @Slf4j
@@ -34,20 +36,9 @@ public class FilmDbStorage implements FilmStorage {
                 "ORDER BY f.film_id;";
 
         List<Film> films = jdbcTemplate.query(sqlQuery, FilmMapping::mapRowToFilm);
-        Map<Long, Film> tmpFilmMap = new HashMap<>();
-        films.forEach(film -> tmpFilmMap.put(film.getId(), film));
 
-        // Take genres for all films
-        Optional.of(showAllFilmsGenres())
-                .ifPresent(genres -> genres
-                        .forEach(genre -> genre
-                                .forEach((key, value) -> tmpFilmMap.get(key).addGenre(value))));
-
-        // Take likes for all films
-        Optional.of(showAllLikesFromUserId())
-                .ifPresent(likes -> likes
-                        .forEach(like -> like
-                                .forEach((key, value) -> tmpFilmMap.get(key).addLikeFromUserId(value))));
+        setFilmsGenres(films);
+        setFilmsLikes(films);
 
         return films;
     }
@@ -60,7 +51,7 @@ public class FilmDbStorage implements FilmStorage {
 
         film.setId(simpleJdbcInsert.executeAndReturnKey(mapFilmToRow(film)).longValue());
 
-        // Set genres for film
+        // Add genres for film
         Optional.ofNullable(film.getGenres())
                 .ifPresent(genres -> addFilmGenres(film.getId(), genres));
 
@@ -95,7 +86,7 @@ public class FilmDbStorage implements FilmStorage {
             deleteFilmGenres(film.getId());
         }
 
-        // Set genres for film
+        // Add genres for film
         Optional.ofNullable(film.getGenres())
                 .ifPresent(genres -> addFilmGenres(film.getId(), genres));
 
@@ -115,15 +106,8 @@ public class FilmDbStorage implements FilmStorage {
         try {
             Film film = jdbcTemplate.queryForObject(sqlQuery, FilmMapping::mapRowToFilm, filmId);
 
-            // Take genres for film
-            Optional.of(showFilmGenres(filmId))
-                    .ifPresent(genres -> genres
-                            .forEach(Objects.requireNonNull(film)::addGenre));
-
-            // Take likes for film
-            Optional.of(showLikesFromUserId(filmId))
-                    .ifPresent(users -> users
-                            .forEach(Objects.requireNonNull(film)::addLikeFromUserId));
+            setFilmGenres(film);
+            setFilmLikes(film);
 
             return film;
 
@@ -195,22 +179,22 @@ public class FilmDbStorage implements FilmStorage {
                 "LIMIT ?;";
 
         List<Film> films = jdbcTemplate.query(sqlQuery, FilmMapping::mapRowToFilm, count);
-        Map<Long, Film> tmpFilmMap = new HashMap<>();
-        films.forEach(film -> tmpFilmMap.put(film.getId(), film));
 
-        // Take genres for all films
-        Optional.of(showAllFilmsGenres())
-                .ifPresent(genres -> genres
-                        .forEach(genre -> genre
-                                .forEach((key, value) -> tmpFilmMap.get(key).addGenre(value))));
-
-        // Take likes for all films
-        Optional.of(showAllLikesFromUserId())
-                .ifPresent(likes -> likes
-                        .forEach(like -> like
-                                .forEach((key, value) -> tmpFilmMap.get(key).addLikeFromUserId(value))));
+        setFilmsGenres(films);
+        setFilmsLikes(films);
 
         return films;
+    }
+
+    private List<Genre> showFilmGenres(Long filmId) {
+        String sqlQuery =
+                "SELECT g.* " +
+                "FROM film_genre fg " +
+                "LEFT JOIN genres g ON fg.genre_id = g.genre_id " +
+                "WHERE fg.film_id = ? " +
+                "ORDER BY g.genre_id;";
+
+        return jdbcTemplate.query(sqlQuery, GenreMapping::mapRowToGenres, filmId);
     }
 
     private void addFilmGenres(Long filmId, Set<Genre> genres) {
@@ -241,25 +225,36 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlQuery, filmId);
     }
 
-    private List<Long> showLikesFromUserId(Long filmId) {
+    private void setFilmLikes(Film film) {
         String sqlQuery =
                 "SELECT user_id " +
                 "FROM likes " +
                 "WHERE film_id = ? " +
                 "ORDER BY user_id DESC;";
 
-        return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> rs.getLong("user_id"), filmId);
+        jdbcTemplate.query(sqlQuery, rs -> {
+            film.addLikeFromUserId(rs.getLong("user_id"));
+        }, film.getId());
     }
 
-    private List<Map<Long, Long>> showAllLikesFromUserId() {
+    private void setFilmsLikes(List<Film> films) {
         String sqlQuery =
                 "SELECT * " +
                 "FROM likes;";
 
-        return jdbcTemplate.query(sqlQuery, FilmMapping::mapRowToFilmLike);
+        Map<Long, Film> tmpFilmMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, film -> film));
+
+        jdbcTemplate.query(sqlQuery, rs -> {
+            Long filmId = rs.getLong("film_id");
+            Long userId = rs.getLong("user_id");
+
+            Optional.ofNullable(tmpFilmMap.get(filmId))
+                    .ifPresent(film -> film.addLikeFromUserId(userId));
+        });
     }
 
-    private List<Genre> showFilmGenres(Long filmId) {
+    private void setFilmGenres(Film film) {
         String sqlQuery =
                 "SELECT g.* " +
                 "FROM film_genre fg " +
@@ -267,15 +262,27 @@ public class FilmDbStorage implements FilmStorage {
                 "WHERE fg.film_id = ? " +
                 "ORDER BY g.genre_id;";
 
-        return jdbcTemplate.query(sqlQuery, GenreMapping::mapRowToGenre, filmId);
+        jdbcTemplate.query(sqlQuery, rs -> {
+            Genre genre = mapRowToGenre(rs);
+            film.addGenre(genre);
+        }, film.getId());
     }
 
-    private List<Map<Long, Genre>> showAllFilmsGenres() {
+    private void setFilmsGenres(List<Film> films) {
         String sqlQuery =
                 "SELECT fg.film_id, g.* " +
                 "FROM film_genre fg " +
                 "LEFT JOIN genres g ON fg.genre_id = g.genre_id;";
 
-        return jdbcTemplate.query(sqlQuery, FilmMapping::mapRowToFilmGenre);
+        Map<Long, Film> tmpFilmMap = films.stream()
+                .collect(Collectors.toMap(Film::getId, film -> film));
+
+        jdbcTemplate.query(sqlQuery, rs -> {
+            Long filmId = rs.getLong("film_id");
+            Genre genre = mapRowToGenre(rs);
+
+            Optional.ofNullable(tmpFilmMap.get(filmId))
+                    .ifPresent(film -> film.addGenre(genre));
+        });
     }
 }

@@ -9,15 +9,13 @@ import java.util.Map;
 
 public class FriendshipMapping {
 
-    public static Map<Long, Friendship> mapRowToAllFriendship(ResultSet rs, int rowNum) throws SQLException {
-        Friendship friendship = new Friendship(rs.getLong("user_id"),
+    public static Friendship mapRowToFriendships(ResultSet rs, int rowNum) throws SQLException {
+        return new Friendship(rs.getLong("user_id"),
                 rs.getLong("friend_id"),
                 FriendStatus.valueOf(rs.getString("friend_status")));
-
-        return Map.of(rs.getLong("user_id"), friendship);
     }
 
-    public static Friendship mapRowToFriendship(ResultSet rs, int rowNum) throws SQLException {
+    public static Friendship mapRowToFriendship(ResultSet rs) throws SQLException {
         return new Friendship(rs.getLong("user_id"),
                 rs.getLong("friend_id"),
                 FriendStatus.valueOf(rs.getString("friend_status")));

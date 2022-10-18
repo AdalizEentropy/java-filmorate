@@ -2,7 +2,6 @@ package ru.yandex.practicum.filmorate.dao.utils;
 
 import lombok.AllArgsConstructor;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.dictionary.Genre;
 import ru.yandex.practicum.filmorate.model.dictionary.Mpa;
 
 import java.sql.ResultSet;
@@ -37,18 +36,5 @@ public class FilmMapping {
                         .name(rs.getString("mpa_name"))
                         .build())
                 .build();
-    }
-
-    public static Map<Long, Genre> mapRowToFilmGenre(ResultSet rs, int rowNum) throws SQLException {
-        Genre genre = Genre.builder()
-                .id(rs.getInt("genre_id"))
-                .name(rs.getString("genre_name"))
-                .build();
-
-        return Map.of(rs.getLong("film_id"), genre);
-    }
-
-    public static Map<Long, Long> mapRowToFilmLike(ResultSet rs, int rowNum) throws SQLException {
-        return Map.of(rs.getLong("film_id"), rs.getLong("user_id"));
     }
 }
