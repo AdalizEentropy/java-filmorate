@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.dao;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.dictionary.Genre;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -198,23 +201,27 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void addFilmGenres(Long filmId, Set<Genre> genres) {
-        String checkSqlQuery =
-                "SELECT film_id " +
-                "FROM film_genre " +
-                "WHERE film_id = ? " +
-                    "AND genre_id = ?;";
-
+        List<Genre> filmGenres = new ArrayList<>(genres);
         String sqlQuery =
                 "INSERT INTO film_genre " +
                 "VALUES (?, ?);";
 
-        for (Genre genre : genres) {
-            if (jdbcTemplate
-                    .query(checkSqlQuery, (rs, n) -> rs.getLong("film_id"), filmId, genre.getId())
-                    .isEmpty()) {
-                jdbcTemplate.update(sqlQuery, filmId, genre.getId());
-            }
-        }
+        deleteFilmGenres(filmId);
+
+        jdbcTemplate.batchUpdate(sqlQuery,
+                new BatchPreparedStatementSetter() {
+
+                    @Override
+                    public void setValues(PreparedStatement ps, int i) throws SQLException {
+                        ps.setLong(1, filmId);
+                        ps.setInt(2, filmGenres.get(i).getId());
+                    }
+
+                    @Override
+                    public int getBatchSize() {
+                        return filmGenres.size();
+                    }
+                });
     }
 
     private void deleteFilmGenres(Long filmId) {
