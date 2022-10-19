@@ -12,4 +12,6 @@ public interface FilmStorage extends Storage<Film> {
     void deleteLike(Film film, Long userId);
 
     List<Film> showMostPopularFilms(Integer count);
+
+    void updateRate(Film film);
 }

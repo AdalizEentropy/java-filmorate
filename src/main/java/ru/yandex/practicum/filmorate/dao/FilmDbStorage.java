@@ -84,12 +84,8 @@ public class FilmDbStorage implements FilmStorage {
                 film.getMpa().getId(),
                 film.getId());
 
-        // Check genres for film
-        if (film.getGenres().isEmpty() || !new ArrayList<>(film.getGenres()).equals(showFilmGenres(film.getId()))) {
-            deleteFilmGenres(film.getId());
-        }
-
-        // Add genres for film
+        //Update film genres
+        deleteFilmGenres(film.getId());
         Optional.ofNullable(film.getGenres())
                 .ifPresent(genres -> addFilmGenres(film.getId(), genres));
 
@@ -176,9 +172,7 @@ public class FilmDbStorage implements FilmStorage {
                 "SELECT f.*, m.mpa_name " +
                 "FROM films f " +
                 "JOIN mpa m ON f.mpa_id = m.mpa_id " +
-                "LEFT JOIN likes l ON f.film_id = l.film_id " +
-                "GROUP BY l.film_id, f.film_id " +
-                "ORDER BY COUNT(l.user_id) DESC, f.film_id DESC " +
+                "ORDER BY f.rate DESC, f.film_id " +
                 "LIMIT ?;";
 
         List<Film> films = jdbcTemplate.query(sqlQuery, FilmMapping::mapRowToFilm, count);
@@ -189,24 +183,11 @@ public class FilmDbStorage implements FilmStorage {
         return films;
     }
 
-    private List<Genre> showFilmGenres(Long filmId) {
-        String sqlQuery =
-                "SELECT g.* " +
-                "FROM film_genre fg " +
-                "LEFT JOIN genres g ON fg.genre_id = g.genre_id " +
-                "WHERE fg.film_id = ? " +
-                "ORDER BY g.genre_id;";
-
-        return jdbcTemplate.query(sqlQuery, GenreMapping::mapRowToGenres, filmId);
-    }
-
     private void addFilmGenres(Long filmId, Set<Genre> genres) {
         List<Genre> filmGenres = new ArrayList<>(genres);
         String sqlQuery =
                 "INSERT INTO film_genre " +
                 "VALUES (?, ?);";
-
-        deleteFilmGenres(filmId);
 
         jdbcTemplate.batchUpdate(sqlQuery,
                 new BatchPreparedStatementSetter() {
@@ -291,5 +272,18 @@ public class FilmDbStorage implements FilmStorage {
             Optional.ofNullable(tmpFilmMap.get(filmId))
                     .ifPresent(film -> film.addGenre(genre));
         });
+    }
+
+    public void updateRate(Film film) {
+        String sqlQuery =
+                "UPDATE films " +
+                "SET rate = ? " +
+                "WHERE film_id = ?;";
+
+        jdbcTemplate.update(sqlQuery,
+                film.getRate(),
+                film.getId());
+
+        log.info("Rate was updated: {}", film);
     }
 }

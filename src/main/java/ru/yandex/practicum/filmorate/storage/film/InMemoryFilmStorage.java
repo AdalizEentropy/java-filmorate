@@ -68,6 +68,12 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void updateRate(Film film) {
+        films.put(film.getId(), film);
+        log.info("Rate was updated: {}", film);
+    }
+
     private int compare(Integer f1, Integer f2) {
         return f1.compareTo(f2) * -1;
     }
