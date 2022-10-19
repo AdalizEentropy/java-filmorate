@@ -117,11 +117,13 @@ public class UserDbStorage implements UserStorage {
             String updateFriend =
                     "UPDATE friendship " +
                     "SET friend_status = ? " +
-                    "WHERE user_id = ?;";
+                    "WHERE user_id = ? " +
+                            "AND friend_id = ?;";
 
             jdbcTemplate.update(updateFriend,
                     APPROVED.toString(),
-                    friendId);
+                    friendId,
+                    userId);
         } else {
             friendStatus = REQUESTED;
         }

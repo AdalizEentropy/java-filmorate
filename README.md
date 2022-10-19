@@ -86,9 +86,7 @@ Swagger API можно нати по ссылке http://localhost:8080/swagger-
     <code>SELECT f.*, m.mpa_name
     FROM films f
     JOIN mpa m ON f.mpa_id = m.mpa_id
-    LEFT JOIN likes l ON f.film_id = l.film_id
-    GROUP BY l.film_id, f.film_id
-    ORDER BY COUNT(l.user_id) DESC, f.film_id DESC
+    ORDER BY f.rate DESC, f.film_id
     LIMIT 10;</code>
 </pre>
 

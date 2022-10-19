@@ -49,7 +49,7 @@ class FilmControllerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.releaseDate")
                         .value(newFilm.getReleaseDate().toString()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.duration").value(newFilm.getDuration()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.rate").value(newFilm.getRate()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.rate").value(0));
     }
 
     @Test
@@ -76,7 +76,7 @@ class FilmControllerTest {
                         .value(changedFilm.getReleaseDate().toString()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.duration").value(changedFilm
                         .getDuration()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.rate").value(changedFilm.getRate()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.rate").value(0));
     }
 
     @Test

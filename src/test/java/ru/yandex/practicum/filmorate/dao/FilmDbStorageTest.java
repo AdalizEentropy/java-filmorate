@@ -199,20 +199,6 @@ class FilmDbStorageTest {
         assertEquals(errorMessage, exception.getMessage());
     }
 
-    @ParameterizedTest(name = "#{index} - Check that can show {0} most popular films")
-    @ValueSource(ints = {1, 2})
-    @DisplayName("Check that can show most popular films")
-    void shouldShowMostPopularFilms(int count) {
-        User user = userStorage.create(createNewUser1());
-        Film film1 = filmStorage.create(createNewFilm1());
-        filmStorage.create(createNewFilm2());
-        filmStorage.addLike(film1, user.getId());
-
-        List<Film> popularFilms = filmStorage.showMostPopularFilms(count);
-        assertThat(popularFilms.size()).isEqualTo(count);
-        assertThat(popularFilms.get(0)).hasFieldOrPropertyWithValue("id", film1.getId());
-    }
-
     @Test
     @DisplayName("Check that don't show most popular films, because there are no any films")
     void shouldNotShowMostPopularFilms() {
@@ -424,40 +410,5 @@ class FilmDbStorageTest {
         assertThat((returnedFilm.getGenres().toArray())[1]).hasFieldOrPropertyWithValue("id", 3);
         assertThat((returnedFilm.getGenres().toArray())[1])
                 .hasFieldOrPropertyWithValue("name", "Мультфильм");
-    }
-
-    @Test
-    @DisplayName("Check that can show most popular films with genres")
-    void shouldShowMostPopularFilmsWithGenres() {
-        Film createFilm = createNewFilm1();
-        createFilm.addGenre(Genre.builder()
-                .id(1)
-                .build());
-
-        filmStorage.create(createFilm);
-        Film film2 = filmStorage.create(createNewFilm2());
-
-        List<Film> popularFilms = filmStorage.showMostPopularFilms(2);
-        assertThat(popularFilms.size()).isEqualTo(2);
-        assertThat(popularFilms.get(0)).hasFieldOrPropertyWithValue("id", film2.getId());;
-        assertThat((popularFilms.get(0).getGenres().size())).isEqualTo(0);
-        assertThat((popularFilms.get(1).getGenres().toArray())[0]).hasFieldOrPropertyWithValue("id", 1);
-        assertThat((popularFilms.get(1).getGenres().toArray())[0])
-                .hasFieldOrPropertyWithValue("name", "Комедия");
-    }
-
-    @Test
-    @DisplayName("Check that can show most popular films with likes")
-    void shouldShowMostPopularFilmsWithLikes() {
-        User user = userStorage.create(createNewUser1());
-        Film film1 = filmStorage.create(createNewFilm1());
-        filmStorage.create(createNewFilm2());
-        filmStorage.addLike(film1, user.getId());
-
-        List<Film> popularFilms = filmStorage.showMostPopularFilms(2);
-        assertThat(popularFilms.size()).isEqualTo(2);
-        assertThat(popularFilms.get(0)).hasFieldOrPropertyWithValue("id", film1.getId());
-        assertThat((popularFilms.get(0).getLikeFromUserId().toArray())[0]).isEqualTo(user.getId());
-        assertThat((popularFilms.get(1).getLikeFromUserId().size())).isEqualTo(0);
     }
 }

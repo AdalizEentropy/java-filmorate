@@ -172,7 +172,7 @@ public class FilmDbStorage implements FilmStorage {
                 "SELECT f.*, m.mpa_name " +
                 "FROM films f " +
                 "JOIN mpa m ON f.mpa_id = m.mpa_id " +
-                "ORDER BY f.rate DESC, f.film_id " +
+                "ORDER BY f.rate DESC, f.film_id DESC " +
                 "LIMIT ?;";
 
         List<Film> films = jdbcTemplate.query(sqlQuery, FilmMapping::mapRowToFilm, count);
