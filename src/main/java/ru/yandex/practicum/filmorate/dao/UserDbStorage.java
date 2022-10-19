@@ -185,16 +185,13 @@ public class UserDbStorage implements UserStorage {
 
     @Override
     public List<User> showCommonFriends(User user, User friend) {
-        String sqlQuery =
-                "SELECT u.* " +
-                "FROM friendship fs_user " +
-                "JOIN (SELECT * " +
-                    "FROM friendship " +
-                    "WHERE user_id = ?) fs_friend " +
-                    "ON fs_user.friend_id = fs_friend.friend_id " +
-                "JOIN users u ON fs_friend.friend_id = u.user_id " +
-                "WHERE fs_user.user_id = ? " +
-                "ORDER BY u.user_id DESC;";
+        String sqlQuery = "SELECT u.* " +
+                "FROM friendship fs " +
+                "JOIN users u ON fs.friend_id = u.user_id " +
+                "WHERE fs.user_id = ? OR fs.user_id = ?" +
+                "GROUP BY fs.friend_id " +
+                "HAVING COUNT(fs.user_id) > 1;";
+
 
         List<User> users = jdbcTemplate.query(sqlQuery, UserMapping::mapRowToUser, user.getId(), friend.getId());
         setUsersFriends(users);
