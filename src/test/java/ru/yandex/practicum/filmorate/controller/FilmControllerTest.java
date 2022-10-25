@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -10,43 +12,29 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import ru.yandex.practicum.filmorate.exception.UpdateException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.util.Objects;
 
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.yandex.practicum.filmorate.utils.CreateTestFilm.createNewFilm1;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase
 class FilmControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
 
-    final Film newFilm = Film.builder()
-            .name("nisi eiusmod")
-            .description("adipisicing")
-            .releaseDate(LocalDate.parse("1967-03-25"))
-            .duration(100)
-            .build();
-
-    final Film changedFilm = Film.builder()
-            .id(1L)
-            .name("Film Updated")
-            .description("New film update decription")
-            .releaseDate(LocalDate.parse("1989-04-17"))
-            .duration(190)
-            .rate(4)
-            .build();
+    Film newFilm = createNewFilm1();
+    Film changedFilm = createNewFilm1();
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
@@ -56,47 +44,39 @@ class FilmControllerTest {
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(newFilm.getName()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.description").value(newFilm.getDescription()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.releaseDate")
                         .value(newFilm.getReleaseDate().toString()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.duration").value(newFilm.getDuration()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.rate").value(newFilm.getRate()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.rate").value(0));
     }
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldChangeFilm() throws Exception {
-        mockMvc.perform(
+        String response = mockMvc.perform(
                 post("/films")
                         .content(objectMapper.writeValueAsString(newFilm))
-                        .contentType(MediaType.APPLICATION_JSON));
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        Integer id = JsonPath.read(response, "$.id");
+        changedFilm.setId(Long.valueOf(id));
 
         mockMvc.perform(
                         put("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(changedFilm.getName()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.description").value(changedFilm.getDescription()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.description").value(changedFilm
+                        .getDescription()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.releaseDate")
                         .value(changedFilm.getReleaseDate().toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.duration").value(changedFilm.getDuration()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.rate").value(changedFilm.getRate()));
-
-        mockMvc.perform(
-                        get("/films"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.*", hasSize(1)))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(changedFilm.getName()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].description").value(changedFilm.getDescription()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].releaseDate")
-                        .value(changedFilm.getReleaseDate().toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].duration").value(changedFilm.getDuration()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].rate").value(changedFilm.getRate()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$.duration").value(changedFilm
+                        .getDuration()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.rate").value(0));
     }
 
     @Test
@@ -110,43 +90,35 @@ class FilmControllerTest {
         mockMvc.perform(
                         get("/films"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.*", hasSize(1)))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(newFilm.getName()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].description").value(newFilm.getDescription()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].releaseDate")
-                        .value(newFilm.getReleaseDate().toString()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].duration").value(newFilm.getDuration()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].rate").value(newFilm.getRate()));
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(1));
     }
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotCreateFilmWithExistId() throws Exception {
-        String errorMessage = "Film with such id already exist";
-        changedFilm.setId(1L);
-
-        mockMvc.perform(
+        String response = mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(newFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Integer id = JsonPath.read(response, "$.id");
+        changedFilm.setId(Long.valueOf(id));
 
         mockMvc.perform(
                         post("/films")
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(id+1));
     }
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateFilmWithIncorrectId() throws Exception {
-        String errorMessage = "Film with such ID does not exist";
-        changedFilm.setId(2L);
+        String errorMessage = "Film with ID -2 does not exist";
+        changedFilm.setId(-2L);
 
         mockMvc.perform(
                         post("/films")
@@ -159,7 +131,7 @@ class FilmControllerTest {
                                 .content(objectMapper.writeValueAsString(changedFilm))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof UpdateException))
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
                 .andExpect(result -> assertEquals(errorMessage,
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }

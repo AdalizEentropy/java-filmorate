@@ -1,8 +1,8 @@
 # Filmorate
-![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white)
-![Java](https://img.shields.io/badge/java-%23ED8B00.svg?style=for-the-badge&logo=java&logoColor=white)
-![Apache Maven](https://img.shields.io/badge/Apache%20Maven-C71A36?style=for-the-badge&logo=Apache%20Maven&logoColor=white)
-![Spring](https://img.shields.io/badge/spring-%236DB33F.svg?style=for-the-badge&logo=spring&logoColor=white)
+![](https://img.shields.io/badge/database-H2Database-blue)
+![](https://img.shields.io/badge/language-Java-orange)
+![](https://img.shields.io/badge/build_automation_tool-Maven-red)
+![](https://img.shields.io/badge/framework-Spring_boot-green)
 
 ### Описание
 
@@ -35,7 +35,22 @@
             <li>Выводить информацию о конкретном фильме;</li>
             <li>Ставить лайки;</li>
             <li>Удалять лайки;</li>
+            <li>Изменять жанры и рейтинг фильмов Киноассоциации</li>
             <li>Выводить Х-топ популярных фильмов.</li></ul>
+        </td>
+    </tr>
+    <tr>
+      <th><b><img alt="img_1.png" height="15" src="img1.png"/> С жанрами фильмов</b></th>
+      <th><b><img alt="img_1.png" height="15" src="img1.png"/> С рейтингами фильмов Киноассоциации</b></th>
+    </tr>
+    <tr>
+        <td>
+            <ul><li>Выводить список всех жанров;</li>
+            <li>Выводить информацию о конкретном жанре;</li></ul>
+        </td>
+        <td>
+            <ul><li>Выводить список всех рейтингов;</li>
+            <li>Выводить информацию о конкретном рейтинге;</li></ul>
         </td>
     </tr>
   </tbody>
@@ -60,25 +75,26 @@ Swagger API можно нати по ссылке http://localhost:8080/swagger-
 #### Примеры SQL-запросов
 ##### Получение всех фильмов
 <pre>
-    <code>SELECT * 
-    FROM film</code>
+    <code>SELECT f.*, m.mpa_name
+    FROM films f
+    JOIN mpa m ON f.mpa_id = m.mpa_id
+    ORDER BY f.film_id;</code>
 </pre>
 
 ##### Получение топ 10 фильмов
 <pre>
-    <code>SELECT f.*
-    FROM film f
-    JOIN like l ON f.id=l.filmid
-    GROUP BY l.filmid
-    ORDER BY COUNT(l.userid) DESC
-    LIMIT 10</code>
+    <code>SELECT f.*, m.mpa_name
+    FROM films f
+    JOIN mpa m ON f.mpa_id = m.mpa_id
+    ORDER BY f.rate DESC, f.film_id
+    LIMIT 10;</code>
 </pre>
 
 ##### Получение названий жанров для фильма №2
 <pre>
-    <code>SELECT f.name, g.name
+    <code>SELECT f.film_name, g.genre_name
     FROM genre g
-    JOIN filmgenre fg ON g.id=fg.genreid
-    JOIN film f ON fg.filmid=f.id
-    WHERE f.id=2</code>
+    JOIN film_genre fg ON g.genre_id=fg.genre_id
+    RIGHT JOIN film f ON fg.film_id=f.film_id
+    WHERE f.film_id=2</code>
 </pre>

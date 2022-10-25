@@ -1,21 +1,18 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import io.swagger.v3.oas.annotations.media.Schema;
+import com.sun.istack.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import ru.yandex.practicum.filmorate.model.enums.Genre;
-import ru.yandex.practicum.filmorate.model.enums.Mpa;
+import ru.yandex.practicum.filmorate.model.dictionary.Genre;
+import ru.yandex.practicum.filmorate.model.dictionary.Mpa;
 import ru.yandex.practicum.filmorate.validator.ReleaseDateValid;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 
 @Data
 @Builder
@@ -37,7 +34,9 @@ public class Film {
 
     private Integer rate;
     private final Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
-    private List<Genre> genre;
+    private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
+
+    @NotNull
     private Mpa mpa;
 
     public void addLikeFromUserId(Long id) {
@@ -46,5 +45,9 @@ public class Film {
 
     public void removeLikeFromUserId(Long id) {
         this.likeFromUserId.remove(id);
+    }
+
+    public void addGenre(Genre genre) {
+        this.genres.add(genre);
     }
 }

@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -10,42 +12,30 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import ru.yandex.practicum.filmorate.exception.UpdateException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.Objects;
 
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.yandex.practicum.filmorate.utils.CreateTestUser.createNewUser1;
+import static ru.yandex.practicum.filmorate.utils.CreateTestUser.createUpdatedUser1;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase
 class UserControllerTest {
     @Autowired
-    private MockMvc mockMvc;
-    @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private MockMvc mockMvc;
 
-    final User newUser = User.builder()
-            .email("mail@mail.ru")
-            .login("dolore")
-            .name("Nick Name")
-            .birthday(LocalDate.parse("1946-08-20"))
-            .build();
-
-    final User changedUser = User.builder()
-            .id(1L)
-            .email("mail@yandex.ru")
-            .login("doloreUpdate")
-            .name("est adipisicing")
-            .birthday(LocalDate.parse("1976-09-20"))
-            .build();
+    User newUser = createNewUser1();
+    User changedUser = createUpdatedUser1();
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
@@ -55,7 +45,6 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(newUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.email").value(newUser.getEmail()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.login").value(newUser.getLogin()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(newUser.getName()))
@@ -66,32 +55,24 @@ class UserControllerTest {
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldChangeUser() throws Exception {
-        mockMvc.perform(
+        String response = mockMvc.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(newUser))
-                        .contentType(MediaType.APPLICATION_JSON));
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andReturn().getResponse().getContentAsString();
+
+        Integer id = JsonPath.read(response, "$.id");
+        changedUser.setId(Long.valueOf(id));
 
         mockMvc.perform(
                 put("/users")
                         .content(objectMapper.writeValueAsString(changedUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(1))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.email").value(changedUser.getEmail()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.login").value(changedUser.getLogin()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.name").value(changedUser.getName()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.birthday")
-                        .value(changedUser.getBirthday().toString()));
-
-        mockMvc.perform(
-                        get("/users"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.*", hasSize(1)))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].email").value(changedUser.getEmail()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].login").value(changedUser.getLogin()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(changedUser.getName()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].birthday")
                         .value(changedUser.getBirthday().toString()));
     }
 
@@ -105,43 +86,35 @@ class UserControllerTest {
 
         mockMvc.perform(
                 get("/users"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.*", hasSize(1)))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].id").value(1))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].email").value(newUser.getEmail()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].login").value(newUser.getLogin()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].name").value(newUser.getName()))
-                .andExpect(MockMvcResultMatchers.jsonPath("$[0].birthday")
-                        .value(newUser.getBirthday().toString()));
+                .andExpect(status().isOk());
     }
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotCreateUserWithExistId() throws Exception {
-        String errorMessage = "User with such id already exist";
-        changedUser.setId(1L);
-
-        mockMvc.perform(
+        String response = mockMvc.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(newUser))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Integer id = JsonPath.read(response, "$.id");
+        changedUser.setId(Long.valueOf(id));
 
         mockMvc.perform(
                 post("/users")
                         .content(objectMapper.writeValueAsString(changedUser))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof ValidationException))
-                .andExpect(result -> assertEquals(errorMessage,
-                        Objects.requireNonNull(result.getResolvedException()).getMessage()));
+                .andExpect(status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(id+1));
     }
 
     @Test
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
     public void shouldNotUpdateUserWithIncorrectId() throws Exception {
-        String errorMessage = "User with such ID does not exist";
-        changedUser.setId(2L);
+        String errorMessage = "User with ID -2 does not exist";
+        changedUser.setId(-2L);
 
         mockMvc.perform(
                 post("/users")
@@ -154,8 +127,7 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(changedUser))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(result -> assertTrue(result.getResolvedException()
-                        instanceof UpdateException))
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException))
                 .andExpect(result -> assertEquals(errorMessage,
                         Objects.requireNonNull(result.getResolvedException()).getMessage()));
     }
@@ -363,11 +335,15 @@ class UserControllerTest {
     public void shouldChangeEmptyNameInUpdate() throws Exception {
         changedUser.setName(null);
 
-        mockMvc.perform(
+        String response = mockMvc.perform(
                         post("/users")
                                 .content(objectMapper.writeValueAsString(newUser))
                                 .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+
+        Integer id = JsonPath.read(response, "$.id");
+        changedUser.setId(Long.valueOf(id));
 
         mockMvc.perform(
                         put("/users")

@@ -3,14 +3,11 @@ package ru.yandex.practicum.filmorate.storage.film;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.EntityNotFoundException;
-import ru.yandex.practicum.filmorate.exception.UpdateException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -38,10 +35,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film update(Film film) {
-        if (!films.containsKey(film.getId())) {
-            throw new UpdateException(String.format("Film with ID %s does not exist", film.getId()));
-        }
-
         films.put(film.getId(), film);
         log.info("Updated: {}", film);
         return film;
@@ -50,10 +43,39 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film getById(Long filmId) {
         if (!films.containsKey(filmId)) {
-            throw new EntityNotFoundException(String.format("There are such film with ID %s", filmId));
+            throw new EntityNotFoundException(String.format("Film with ID %s does not exist", filmId));
         }
 
         return films.get(filmId);
+    }
+
+    @Override
+    public void addLike(Film film, Long userId) {
+        film.addLikeFromUserId(userId);
+    }
+
+    @Override
+    public void deleteLike(Film film, Long userId) {
+        film.removeLikeFromUserId(userId);
+    }
+
+    @Override
+    public List<Film> showMostPopularFilms(Integer count) {
+        return findAll()
+                .stream()
+                .sorted((f1, f2) -> compare(f1.getLikeFromUserId().size(), f2.getLikeFromUserId().size()))
+                .limit(count)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateRate(Film film) {
+        films.put(film.getId(), film);
+        log.info("Rate was updated: {}", film);
+    }
+
+    private int compare(Integer f1, Integer f2) {
+        return f1.compareTo(f2) * -1;
     }
 
     private Long getNextId(){
