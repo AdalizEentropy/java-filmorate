@@ -1,12 +1,14 @@
 package ru.yandex.practicum.filmorate.model.dictionary;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.util.Objects;
 
-@Data
-@Builder
+@Getter
+@Setter
+@Accessors(chain = true)
 public class Genre {
 
     private Integer id;

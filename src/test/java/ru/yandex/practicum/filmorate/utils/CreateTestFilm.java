@@ -7,40 +7,34 @@ import java.time.LocalDate;
 
 public class CreateTestFilm {
     public static Film createNewFilm1() {
-        return Film.builder()
-                .name("nisi eiusmod")
-                .description("adipisicing")
-                .releaseDate(LocalDate.parse("1967-03-25"))
-                .duration(100)
-                .mpa(Mpa.builder()
-                        .id(1)
-                        .build())
-                .build();
+        return new Film()
+                .setName("nisi eiusmod")
+                .setDescription("adipisicing")
+                .setReleaseDate(LocalDate.parse("1967-03-25"))
+                .setDuration(100)
+                .setMpa(new Mpa()
+                        .setId(1));
     }
 
     public static Film createNewFilm2() {
-        return Film.builder()
-                .name("show more")
-                .description("bla bla")
-                .releaseDate(LocalDate.parse("2001-03-25"))
-                .duration(10000)
-                .rate(10)
-                .mpa(Mpa.builder()
-                        .id(2)
-                        .build())
-                .build();
+        return new Film()
+                .setName("show more")
+                .setDescription("bla bla")
+                .setReleaseDate(LocalDate.parse("2001-03-25"))
+                .setDuration(10000)
+                .setRate(10)
+                .setMpa(new Mpa()
+                        .setId(2));
     }
 
     public static Film createUpdatedFilm1() {
-        return Film.builder()
-                .name("Film Updated")
-                .description("New film update decription")
-                .releaseDate(LocalDate.parse("1989-04-17"))
-                .duration(190)
-                .rate(4)
-                .mpa(Mpa.builder()
-                        .id(3)
-                        .build())
-                .build();
+        return new Film()
+                .setName("Film Updated")
+                .setDescription("New film update decription")
+                .setReleaseDate(LocalDate.parse("1989-04-17"))
+                .setDuration(190)
+                .setRate(4)
+                .setMpa(new Mpa()
+                        .setId(3));
     }
 }

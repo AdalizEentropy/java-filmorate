@@ -8,9 +8,8 @@ import java.sql.SQLException;
 public class MpaMapping {
 
     public static Mpa mapRowToMpa(ResultSet rs, int rowNum) throws SQLException {
-        return Mpa.builder()
-                .id(rs.getInt("mpa_id"))
-                .name(rs.getString("mpa_name"))
-                .build();
+        return new Mpa()
+                .setId(rs.getInt("mpa_id"))
+                .setName(rs.getString("mpa_name"));
     }
 }

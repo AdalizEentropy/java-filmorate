@@ -19,12 +19,11 @@ public class UserMapping {
     }
 
     public static User mapRowToUser(ResultSet rs, int rowNum) throws SQLException {
-        return User.builder()
-                .id(rs.getLong("user_id"))
-                .email(rs.getString("email"))
-                .login(rs.getString("login"))
-                .name(rs.getString("user_name"))
-                .birthday(rs.getDate("birthday").toLocalDate())
-                .build();
+        return new User()
+                .setId(rs.getLong("user_id"))
+                .setEmail(rs.getString("email"))
+                .setLogin(rs.getString("login"))
+                .setName(rs.getString("user_name"))
+                .setBirthday(rs.getDate("birthday").toLocalDate());
     }
 }

@@ -46,9 +46,8 @@ class FilmServiceTest {
     @DisplayName("Check that can show most popular films with genres")
     void shouldShowMostPopularFilmsWithGenres() {
         Film createFilm = createNewFilm1();
-        createFilm.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        createFilm.addGenre(new Genre()
+                .setId(1));
 
         filmService.create(createFilm);
         Film film2 = filmService.create(createNewFilm2());

@@ -24,17 +24,15 @@ public class FilmMapping {
     }
 
     public static Film mapRowToFilm(ResultSet rs, int rowNum) throws SQLException {
-        return Film.builder()
-                .id(rs.getLong("film_id"))
-                .name(rs.getString("film_name"))
-                .description(rs.getString("description"))
-                .releaseDate(rs.getDate("release_date").toLocalDate())
-                .duration(rs.getLong("duration"))
-                .rate(rs.getInt("rate"))
-                .mpa(Mpa.builder()
-                        .id(rs.getInt("mpa_id"))
-                        .name(rs.getString("mpa_name"))
-                        .build())
-                .build();
+        return new Film()
+                .setId(rs.getLong("film_id"))
+                .setName(rs.getString("film_name"))
+                .setDescription(rs.getString("description"))
+                .setReleaseDate(rs.getDate("release_date").toLocalDate())
+                .setDuration(rs.getLong("duration"))
+                .setRate(rs.getInt("rate"))
+                .setMpa(new Mpa()
+                        .setId(rs.getInt("mpa_id"))
+                        .setName(rs.getString("mpa_name")));
     }
 }

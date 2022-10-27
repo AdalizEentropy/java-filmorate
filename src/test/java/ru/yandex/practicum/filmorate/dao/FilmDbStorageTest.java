@@ -211,9 +211,8 @@ class FilmDbStorageTest {
     @DisplayName("Check that films' list has film with genres")
     void shouldFindFilmWithGenres() {
         Film film = createNewFilm1();
-        film.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        film.addGenre(new Genre()
+                .setId(1));
 
         filmStorage.create(film);
         List<Film> films = filmStorage.findAll();
@@ -231,13 +230,11 @@ class FilmDbStorageTest {
     @DisplayName("Check that films' list has film with two genres")
     void shouldFindFilmWithTwoGenres() {
         Film film = createNewFilm1();
-        film.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        film.addGenre(new Genre()
+                .setId(1));
 
-        film.addGenre(Genre.builder()
-                .id(2)
-                .build());
+        film.addGenre(new Genre()
+                .setId(2));
 
         filmStorage.create(film);
         List<Film> films = filmStorage.findAll();
@@ -259,17 +256,14 @@ class FilmDbStorageTest {
     @DisplayName("Check that films' list has film with unique genres")
     void shouldFindFilmWithUniqueGenres() {
         Film film = createNewFilm1();
-        film.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        film.addGenre(new Genre()
+                .setId(1));
 
-        film.addGenre(Genre.builder()
-                .id(2)
-                .build());
+        film.addGenre(new Genre()
+                .setId(2));
 
-        film.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        film.addGenre(new Genre()
+                .setId(1));
 
         filmStorage.create(film);
         List<Film> films = filmStorage.findAll();
@@ -327,9 +321,8 @@ class FilmDbStorageTest {
     @DisplayName("Check that can receive film by id with genres")
     void shouldGetFilmByIdWithGenres() {
         Film createFilm = createNewFilm2();
-        createFilm.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        createFilm.addGenre(new Genre()
+                .setId(1));
 
         Film film = filmStorage.create(createFilm);
         Film receivedFilm = filmStorage.getById(film.getId());
@@ -344,17 +337,14 @@ class FilmDbStorageTest {
     @DisplayName("Check that can receive film by id with unique genres")
     void shouldGetFilmByIdWithUniqueGenres() {
         Film createFilm = createNewFilm2();
-        createFilm.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        createFilm.addGenre(new Genre()
+                .setId(1));
 
-        createFilm.addGenre(Genre.builder()
-                .id(2)
-                .build());
+        createFilm.addGenre(new Genre()
+                .setId(2));
 
-        createFilm.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        createFilm.addGenre(new Genre()
+                .setId(1));
 
         Film film = filmStorage.create(createFilm);
         Film receivedFilm = filmStorage.getById(film.getId());
@@ -386,16 +376,13 @@ class FilmDbStorageTest {
     void shouldUpdateFilmWithGenres() {
         Film createFilm = createNewFilm1();
         Film updateFilm = createUpdatedFilm1();
-        createFilm.addGenre(Genre.builder()
-                .id(1)
-                .build());
+        createFilm.addGenre(new Genre()
+                .setId(1));
 
-        updateFilm.addGenre(Genre.builder()
-                .id(3)
-                .build());
-        updateFilm.addGenre(Genre.builder()
-                .id(2)
-                .build());
+        updateFilm.addGenre(new Genre()
+                .setId(3));
+        updateFilm.addGenre(new Genre()
+                .setId(2));
 
         Film film = filmStorage.create(createFilm);
         updateFilm.setId(film.getId());

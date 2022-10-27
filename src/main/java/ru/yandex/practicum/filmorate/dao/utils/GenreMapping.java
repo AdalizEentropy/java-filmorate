@@ -8,16 +8,14 @@ import java.sql.SQLException;
 public class GenreMapping {
 
     public static Genre mapRowToGenres(ResultSet rs, int rowNum) throws SQLException {
-        return Genre.builder()
-                .id(rs.getInt("genre_id"))
-                .name(rs.getString("genre_name"))
-                .build();
+        return new Genre()
+                .setId(rs.getInt("genre_id"))
+                .setName(rs.getString("genre_name"));
     }
 
     public static Genre mapRowToGenre(ResultSet rs) throws SQLException {
-        return Genre.builder()
-                .id(rs.getInt("genre_id"))
-                .name(rs.getString("genre_name"))
-                .build();
+        return new Genre()
+                .setId(rs.getInt("genre_id"))
+                .setName(rs.getString("genre_name"));
     }
 }
