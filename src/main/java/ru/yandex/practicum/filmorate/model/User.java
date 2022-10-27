@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -14,6 +15,7 @@ import java.util.TreeSet;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 @Accessors(chain = true)
 public class User {
     private Long id;

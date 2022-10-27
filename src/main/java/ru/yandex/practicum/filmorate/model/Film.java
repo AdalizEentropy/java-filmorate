@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sun.istack.NotNull;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -19,6 +20,7 @@ import java.util.TreeSet;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 @Accessors(chain = true)
 public class Film {
     private Long id;
@@ -37,8 +39,8 @@ public class Film {
     private long duration;
 
     private Integer rate;
-    private final Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
-    private final Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
+    private Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
+    private Set<Genre> genres = new TreeSet<>();
 
     @NotNull
     private Mpa mpa;
@@ -53,5 +55,9 @@ public class Film {
 
     public void addGenre(Genre genre) {
         this.genres.add(genre);
+    }
+
+    public Set<Genre> getGenres() {
+        return new TreeSet<>(genres);
     }
 }

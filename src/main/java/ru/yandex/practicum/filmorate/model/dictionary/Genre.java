@@ -1,29 +1,21 @@
 package ru.yandex.practicum.filmorate.model.dictionary;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-import java.util.Objects;
-
 @Getter
 @Setter
+@EqualsAndHashCode
 @Accessors(chain = true)
-public class Genre {
+public class Genre implements Comparable<Genre> {
 
     private Integer id;
     private String name;
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Genre genre = (Genre) o;
-        return Objects.equals(id, genre.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public int compareTo(Genre genre) {
+        return this.id - genre.id;
     }
 }
