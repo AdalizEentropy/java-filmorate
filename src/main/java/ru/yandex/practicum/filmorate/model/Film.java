@@ -14,7 +14,6 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -39,7 +38,7 @@ public class Film {
     private long duration;
 
     private Integer rate;
-    private Set<Long> likeFromUserId = new TreeSet<>(Comparator.comparingLong(Long::longValue));
+    private Set<Long> likeFromUserId = new TreeSet<>();
     private Set<Genre> genres = new TreeSet<>();
 
     @NotNull
@@ -59,5 +58,9 @@ public class Film {
 
     public Set<Genre> getGenres() {
         return new TreeSet<>(genres);
+    }
+
+    public Set<Long> getLikeFromUserId() {
+        return new TreeSet<>(likeFromUserId);
     }
 }
