@@ -74,4 +74,16 @@ public class FilmService {
     public List<Film> showMostPopularFilms(Integer count) {
         return filmStorage.showMostPopularFilms(count);
     }
+
+    public List<Film> searchFilms(String filter, String by) {
+        if (filter.isBlank()) {
+            throw new IllegalArgumentException("search string could not be blank");
+        }
+
+        if ("title".equals(by)) {
+            return filmStorage.searchFilmByTitle(filter);
+        } else {
+            throw new IllegalArgumentException("incorrect filter type");
+        }
+    }
 }

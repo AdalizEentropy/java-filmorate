@@ -286,4 +286,19 @@ public class FilmDbStorage implements FilmStorage {
 
         log.info("Rate was updated: {}", film);
     }
+
+    @Override
+    public List<Film> searchFilmByTitle(String filter) {
+        String sqlQuery = "SELECT f.*, m.mpa_name " +
+                "FROM films f " +
+                "JOIN mpa m ON f.mpa_id = m.mpa_id " +
+                "WHERE LOWER(f.film_name) LIKE LOWER(?)" +
+                "ORDER BY f.rate DESC";
+
+        List<Film> films = jdbcTemplate.query(sqlQuery, FilmMapping::mapRowToFilm, "%"+filter+"%");
+        setFilmsGenres(films);
+        setFilmsLikes(films);
+
+        return films;
+    }
 }

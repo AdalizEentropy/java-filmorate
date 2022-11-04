@@ -14,4 +14,6 @@ public interface FilmStorage extends Storage<Film> {
     List<Film> showMostPopularFilms(Integer count);
 
     void updateRate(Film film);
+
+    List<Film> searchFilmByTitle(String filter);
 }

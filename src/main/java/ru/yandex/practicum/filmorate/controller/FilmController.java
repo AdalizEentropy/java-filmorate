@@ -70,8 +70,15 @@ public class FilmController {
 
     @GetMapping("/popular")
     @ResponseStatus(code = HttpStatus.OK)
-    @Operation(summary = "Получение списка X-топ поулярных фильмов")
+    @Operation(summary = "Получение списка X-топ популярных фильмов")
     public List<Film> showMostPopularFilms(@RequestParam(defaultValue = FILMS_COUNT) Integer count) {
         return filmService.showMostPopularFilms(count);
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Поиск фильмов по названию и/или режиссеру")
+    public List<Film> searchFilms(@RequestParam String query,
+                                  @RequestParam(defaultValue = "title") String by) {
+        return filmService.searchFilms(query, by);
     }
 }

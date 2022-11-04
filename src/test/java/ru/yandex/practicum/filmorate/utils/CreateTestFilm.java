@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public class CreateTestFilm {
     public static Film createNewFilm1() {
         return new Film()
-                .setName("nisi eiusmod")
+                .setName("nisi eiusmod Film")
                 .setDescription("adipisicing")
                 .setReleaseDate(LocalDate.parse("1967-03-25"))
                 .setDuration(100)
@@ -18,7 +18,7 @@ public class CreateTestFilm {
 
     public static Film createNewFilm2() {
         return new Film()
-                .setName("show more")
+                .setName("show more film")
                 .setDescription("bla bla")
                 .setReleaseDate(LocalDate.parse("2001-03-25"))
                 .setDuration(10000)

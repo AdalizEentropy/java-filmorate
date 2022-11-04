@@ -81,4 +81,10 @@ public class InMemoryFilmStorage implements FilmStorage {
     private Long getNextId(){
         return filmId++;
     }
+
+    @Override
+    public List<Film> searchFilmByTitle(String query) {
+        // There is no realization
+        return null;
+    }
 }

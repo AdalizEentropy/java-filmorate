@@ -398,4 +398,36 @@ class FilmDbStorageTest {
         assertThat((returnedFilm.getGenres().toArray())[1])
                 .hasFieldOrPropertyWithValue("name", "Мультфильм");
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"film", "Film", "IL"})
+    @DisplayName("Check that film was found case-insensitive")
+    void shouldSearchFilmByTitle(String filter) {
+        filmStorage.create(createNewFilm1());
+        filmStorage.create(createNewFilm2());
+
+        assertThat(filmStorage.searchFilmByTitle(filter).size())
+                .isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("Check that film was found in correct order")
+    void shouldSearchFilmByTitleWithOrder() {
+        filmStorage.create(createNewFilm1());
+        filmStorage.create(createNewFilm2());
+
+        List<Film> found = filmStorage.searchFilmByTitle("film");
+
+        assertEquals(2, found.size());
+        assertThat(found.get(0))
+                .hasFieldOrPropertyWithValue("rate", 10);
+    }
+
+    @Test
+    @DisplayName("Check that film was not found")
+    void shouldSearchFilmByTitleWithNotExistName() {
+
+        assertThat(filmStorage.searchFilmByTitle("qwerty123"))
+                .isEmpty();
+    }
 }
